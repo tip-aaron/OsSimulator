@@ -1,0 +1,80 @@
+# ==========================================
+# 1. Premake Generated Files
+# ==========================================
+# Visual Studio
+*.sln
+*.vcxproj
+*.vcxproj.user
+*.vcxproj.filters
+.vs/
+
+# Makefiles (VS Code / CLion / Linux / Mac)
+Makefile
+*.make
+
+# Xcode (macOS)
+*.xcodeproj/
+*.xcworkspace/
+
+# ==========================================
+# 2. Build Artifacts & Compiled Code
+# ==========================================
+bin/
+bin-int/
+
+# Standard compiled extensions
+*.o
+*.obj
+*.out
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+
+# ==========================================
+# 3. Python & Visualization
+# ==========================================
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyo
+
+# ==========================================
+# 4. Simulation Data Outputs
+# ==========================================
+data/*.csv
+data/*.png
+data/*.jpg
+data/*.svg
+data/*.log
+
+# ==========================================
+# 5. IDEs & Editor Configuration
+# ==========================================
+# CLion / JetBrains
+.idea/
+cmake-build-*/
+
+# VS Code 
+.vscode/
+
+# ==========================================
+# 6. Operating System Clutter
+# ==========================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/

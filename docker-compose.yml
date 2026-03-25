@@ -1,0 +1,8 @@
+services:
+  simulator-env:
+    build: .
+    container_name: os-simulator-container
+    volumes:
+      - .:/app
+    tty: true
+    stdin_open: true
