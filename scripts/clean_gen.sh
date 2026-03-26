@@ -55,6 +55,7 @@ fi
 echo ""
 echo "Cleaning Python virtual environment..."
 rm -rf "visualizer/.venv"
+rm -rf "workloads_generator/.venv"
 
 echo ""
 echo "Cleaning vendor submodules via Git..."

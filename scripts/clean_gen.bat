@@ -46,6 +46,9 @@ ECHO Cleaning Python virtual environment...
 IF EXIST "visualizer\.venv" (
     RMDIR /S /Q "visualizer\.venv"
 )
+IF EXIST "workloads_generator\.venv" (
+    RMDIR /S /Q "workloads_generator\.venv"
+)
 
 ECHO.
 ECHO Cleaning vendor submodules via Git...

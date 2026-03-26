@@ -79,4 +79,6 @@ ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
 
+
+workloads/
 !vendor/premake5-windows.exe
