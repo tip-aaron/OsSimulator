@@ -45,9 +45,11 @@ ECHO.
 ECHO Cleaning Python virtual environment...
 IF EXIST "visualizer\.venv" (
     RMDIR /S /Q "visualizer\.venv"
+    RMDIR /S /Q "visualizer\__pycache__"
 )
-IF EXIST "workloads_generator\.venv" (
-    RMDIR /S /Q "workloads_generator\.venv"
+IF EXIST "workload_generator\.venv" (
+    RMDIR /S /Q "workload_generator\.venv"
+    RMDIR /S /Q "workload_generator\__pycache__"
 )
 
 ECHO.

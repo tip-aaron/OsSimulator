@@ -55,7 +55,9 @@ fi
 echo ""
 echo "Cleaning Python virtual environment..."
 rm -rf "visualizer/.venv"
-rm -rf "workloads_generator/.venv"
+rm -rf "visualizer/__pycache__"
+rm -rf "workload_generator/.venv"
+rm -rf "workload_generator/__pycache__"
 
 echo ""
 echo "Cleaning vendor submodules via Git..."
