@@ -94,7 +94,16 @@ files({
     "Source/utils/**.hpp",
     "Source/windows/**.cpp",
     "Source/windows/**.hpp",
+    "Include/**.hpp",
+    "README.md",
+    "TODO.md"
 })
+
+vpaths {
+    ["Source"] = "Source/**.cpp",
+    ["Include"] = "Include/**.hpp",
+    ["Documentation"] = { "README.md", "TODO.md" },
+}
 
 project("LinuxSimulator")
 kind("ConsoleApp")
@@ -111,7 +120,16 @@ files({
     "Source/utils/**.hpp",
     "Source/linux/**.cpp",
     "Source/linux/**.hpp",
+    "Include/**.hpp",
+    "README.md",
+    "TODO.md"
 })
+
+vpaths {
+    ["Source"] = "Source/**.cpp",
+    ["Include"] = "Include/**.hpp",
+    ["Documentation"] = { "README.md", "TODO.md" },
+}
 
 group("")
 
