@@ -61,5 +61,19 @@ IF %ERRORLEVEL% NEQ 0 (
 )
 
 ECHO.
+ECHO Refreshing environment variables...
+
+REM Read System PATH from Registry
+FOR /F "tokens=2* delims=	 " %%A IN ('REG QUERY "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v PATH') DO SET "SYS_PATH=%%B"
+
+REM Read User PATH from Registry
+FOR /F "tokens=2* delims=	 " %%A IN ('REG QUERY "HKCU\Environment" /v PATH') DO SET "USER_PATH=%%B"
+
+REM Combine and update the current session's PATH
+SET "PATH=%SYS_PATH%;%USER_PATH%"
+
+ECHO Environment variables updated! You can now use installed tools immediately.
+
+ECHO.
 ECHO All necessary tools and dependencies are installed!
 EXIT /B 0
