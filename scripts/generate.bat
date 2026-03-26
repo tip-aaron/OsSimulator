@@ -96,28 +96,28 @@ pip install -r visualizer\requirements.txt || (
 
 ECHO.
 ECHO Setting up workloads generator...
-python -m venv workloads_generator\.venv || (
+python -m venv workload_generator\.venv || (
     ECHO Error: Failed to create Python virtual environment.
     PAUSE
     EXIT /B 1
 )
 
 ECHO Activating Python virtual environment and installing dependencies...
-CALL workloads_generator\.venv\Scripts\activate.bat || (
+CALL workload_generator\.venv\Scripts\activate.bat || (
     ECHO Error: Failed to activate virtual environment.
     PAUSE
     EXIT /B 1
 )
 
 ECHO Installing Python dependencies from requirements.txt...
-pip install -r workloads_generator\requirements.txt || (
+pip install -r workload_generator\requirements.txt || (
     ECHO Error: Failed to install pip requirements.
     PAUSE
     EXIT /B 1
 )
 
 ECHO Running workloads generator to create workloads...
-python workloads_generator\main.py || (
+python workload_generator\main.py || (
     ECHO Error: Failed to generate workloads.
     PAUSE
     EXIT /B 1

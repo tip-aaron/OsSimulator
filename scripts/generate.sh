@@ -81,17 +81,17 @@ pip install -r visualizer/requirements.txt || { echo "Error: Failed to install p
 
 echo ""
 echo "Setting up workloads generator Python environment..."
-python3 -m venv workloads_generator/.venv || { echo "Error: Failed to create Python virtual environment."; exit 1; }
+python3 -m venv workload_generator/.venv || { echo "Error: Failed to create Python virtual environment."; exit 1; }
 
 echo "Activating Python virtual environment and installing dependencies..."
-source workloads_generator/.venv/bin/activate || { echo "Error: Failed to activate virtual environment."; exit 1; }
+source workload_generator/.venv/bin/activate || { echo "Error: Failed to activate virtual environment."; exit 1; }
 
 echo "Installing Python dependencies from requirements.txt..."
-pip install -r workloads_generator/requirements.txt || { echo "Error: Failed to install pip requirements."; exit 1; }
+pip install -r workload_generator/requirements.txt || { echo "Error: Failed to install pip requirements."; exit 1; }
 
 echo ""
 echo "Running workloads generator to create workloads..."
-python workloads_generator/main.py || { echo "Error: Failed to generate workloads."; exit 1; }
+python workload_generator/main.py || { echo "Error: Failed to generate workloads."; exit 1; }
 
 echo ""
 echo "Generation complete!"
