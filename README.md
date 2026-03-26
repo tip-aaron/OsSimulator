@@ -61,3 +61,11 @@ Please follow the steps carefully to ensure a successful setup.
     - If you chose **Visual Studio**, you can *click* on the generated `.sln` file to open the project right away.
     - If you chose **Visual Studio Code**, you can *open* the project folder and it should automatically detect the generated build files.
     - If you chose **CLion**, you can *open* the project folder and it should automatically detect the generated CMake files.
+
+## Running the Application
+
+- To run the application, build the project using your IDE or command line, and then execute the generated binary. The application will simulate an operating system environment, allowing you to test various features and functionalities.
+
+- Visualizing saved data
+  - The application saves data in a specific format (e.g., JSON, CSV, or binary). You can use tools like Excel, Python scripts, or custom visualization software to analyze and visualize this data.
+  - For running our own visualizer, you can execute the `main.py` script in `visualizer/` using **Python**.
