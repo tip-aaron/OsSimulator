@@ -45,7 +45,7 @@ fi
 echo ""
 
 case "$choice" in
-    1|2|3) ACTION="gmake2" ;;
+    1|2|3) ACTION="gmake" ;;
     4)     ACTION="codeblocks" ;;
     5)     ACTION="codelite" ;;
     6)     ACTION="vs2015" ;;

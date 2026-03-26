@@ -39,9 +39,9 @@ IF "%PREMAKE%"=="UNSUPPORTED_OS_ERROR" (
 ECHO.
 
 REM Map the user's choice to a Premake action
-IF "%CHOICE%"=="1" SET "ACTION=gmake2"
-IF "%CHOICE%"=="2" SET "ACTION=gmake2"
-IF "%CHOICE%"=="3" SET "ACTION=gmake2"
+IF "%CHOICE%"=="1" SET "ACTION=gmake"
+IF "%CHOICE%"=="2" SET "ACTION=gmake"
+IF "%CHOICE%"=="3" SET "ACTION=gmake"
 IF "%CHOICE%"=="4" SET "ACTION=codeblocks"
 IF "%CHOICE%"=="5" SET "ACTION=codelite"
 IF "%CHOICE%"=="6" SET "ACTION=vs2015"
