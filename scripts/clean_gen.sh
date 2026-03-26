@@ -44,8 +44,6 @@ elif [[ "$PREMAKE" == "UNSUPPORTED_OS_ERROR" ]]; then
     exit 1
 fi
 
-source "$(dirname "$0")/utils/install_tools.sh"
-
 echo ""
 echo "Cleaning Premake5 project configurations and build artifacts..."
 if [ -f "$PREMAKE" ]; then

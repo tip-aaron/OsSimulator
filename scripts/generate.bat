@@ -27,7 +27,6 @@ ECHO.
 
 SET /P "CHOICE=Enter your choice (1-11): "
 
-CALL "%~dp0utils\install_tools.bat"
 CALL "%~dp0utils\get_premake.bat"
 
 REM get_premake.bat sets the %PREMAKE% variable

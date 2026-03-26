@@ -24,7 +24,6 @@ IF /I NOT "%CONFIRM%"=="Y" IF /I NOT "%CONFIRM%"=="YES" (
 )
 
 
-CALL "%~dp0utils\install_tools.bat"
 CALL "%~dp0utils\get_premake.bat"
 
 REM get_premake.bat sets the %PREMAKE% variable

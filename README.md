@@ -4,7 +4,13 @@
 
 ## Setup
 
-Only Git is needed at first as the scripts in this project will automatically download and set up any additional tools and dependencies required for development.
+### Prerequisites
+
+- Git
+- Python 3.x (for running the setup scripts) and pip (Python package installer)
+- C++ compiler (e.g., GCC, Clang, MSVC)
+- Make or CMake (If you don't use an IDE like Visual Studio or CLion)
+- An IDE or code editor of your choice (e.g., Visual Studio, Visual Studio Code, CLion)
 
 ### Getting the Project
 

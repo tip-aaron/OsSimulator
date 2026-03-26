@@ -42,8 +42,6 @@ elif [[ "$PREMAKE" == "UNSUPPORTED_OS_ERROR" ]]; then
     exit 1
 fi
 
-source "$(dirname "$0")/utils/install_tools.sh"
-
 echo ""
 
 case "$choice" in
