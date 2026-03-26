@@ -81,4 +81,5 @@ $RECYCLE.BIN/
 
 
 workloads/
+!workloads/README.md
 !vendor/premake5-windows.exe
