@@ -62,7 +62,7 @@ data/*.log
 .idea/
 cmake-build-*/
 
-# VS Code 
+# VS Code
 .vscode/
 
 # ==========================================
@@ -78,3 +78,5 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
+
+!vendor/premake5-windows.exe
