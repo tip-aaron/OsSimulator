@@ -8,7 +8,7 @@
 
 - Git
 - Python 3.x (for running the setup scripts) and pip (Python package installer)
-- C++ compiler (e.g., GCC, Clang, MSVC)
+- C++ compiler (e.g., GCC, Clang, MSVC). You should have this already if you have an IDE like Visual Studio or CLion installed.
 - Make or CMake (If you don't use an IDE like Visual Studio or CLion)
 - An IDE or code editor of your choice (e.g., Visual Studio, Visual Studio Code, CLion)
 
@@ -53,7 +53,7 @@ Please follow the steps carefully to ensure a successful setup.
         ```
 
 3. Follow the prompts in the script to select your desired build system
-    and IDE. The script will automatically download and set up necessary tools and dependencies.
+    and IDE.
 
 4. After the script completes, open your chosen code editor or IDE and choose this
     project to start working on it.
