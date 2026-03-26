@@ -1,56 +1,56 @@
 #pragma once
 
+namespace os_simulation_process {
 struct Process {
-private:
-    int pId;
-    int priority;
-    /**
-     * Total cpu time required
-     */
-    int burstTime;
-    /**
-     * When it entered the system
-     */
-    int arrivalTime;
+ private:
+  int mId;
+  int mPriority;
+  /**
+   * Total cpu time required
+   */
+  int mBurstTime;
+  /**
+   * When it entered the system
+   */
+  int mArrivalTime;
 
-    int remainingTime;
-    /**
-     * -1 means it hasn't started yet
-     */
-    int startTime{-1};  
-    int completionTime{0};
+  int mRemainingTime;
+  /**
+   * -1 means it hasn't started yet
+   */
+  int mStartTime{-1};
+  int mCompletionTime{0};
 
-public:
-    Process(int processId, int procPriority, int totalBurst, int arrival)
-        : pId(processId), priority(procPriority), burstTime(totalBurst), 
-          arrivalTime(arrival), remainingTime(totalBurst) {}
+ public:
+  Process(int processId, int procPriority, int totalBurst, int arrival)
+      : mId(processId),
+        mPriority(procPriority),
+        mBurstTime(totalBurst),
+        mArrivalTime(arrival),
+        mRemainingTime(totalBurst) {}
 
-    void setStartTime(int time) {
-        if (startTime == -1) {
-            startTime = time;
-        }
+  void setStartTime(int time) {
+    if (mStartTime == -1) {
+      mStartTime = time;
     }
+  }
 
-    void setCompletionTime(int time) {
-        completionTime = time;
+  void setCompletionTime(int time) { mCompletionTime = time; }
+
+  void addTick() {
+    if (mRemainingTime > 0) {
+      mRemainingTime--;
     }
+  }
 
-    void tick() {
-        if (remainingTime > 0) {
-            remainingTime--;
-        }
-    }
+  [[nodiscard]] int getId() const { return mId; }
+  [[nodiscard]] int getPriority() const { return mPriority; }
+  [[nodiscard]] int getBurstTime() const { return mBurstTime; }
+  [[nodiscard]] int getArrivalTime() const { return mArrivalTime; }
+  [[nodiscard]] int getRemainingTime() const { return mRemainingTime; }
+  [[nodiscard]] int getStartTime() const { return mStartTime; }
+  [[nodiscard]] int getCompletionTime() const { return mCompletionTime; }
 
-    [[nodiscard]] int getId() const             { return pId; }
-    [[nodiscard]] int getPriority() const       { return priority; }
-    [[nodiscard]] int getBurstTime() const      { return burstTime; }
-    [[nodiscard]] int getArrivalTime() const    { return arrivalTime; }
-    [[nodiscard]] int getRemainingTime() const  { return remainingTime; }
-    [[nodiscard]] int getStartTime() const      { return startTime; }
-    [[nodiscard]] int getCompletionTime() const { return completionTime; }
-
-    [[nodiscard]] bool isFinished() const { 
-        return remainingTime == 0; 
-    }
+  [[nodiscard]] bool isFinished() const { return mRemainingTime == 0; }
 };
-
+}  // namespace os_simulation_process

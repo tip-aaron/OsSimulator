@@ -1,5 +1,18 @@
 # OS Simulator
 
+## Naming Conventions
+
+- `Namespaces` must be lowercase_letters
+- `Classes` must be PascalCase
+- `private` attributes must be prepended with `m` and have PascalCase,
+- `function names` must begin with a verb and use camelCase
+- `function arguments` must use camelCase
+- `variable` names must use camelCase with optional camelCase_withUnderscore
+- `pointers` must begin with `p` and the '*' be placed exactly before the variable name.
+- `references` must begin with `r` and be the same as `pointers`
+- `constants` must be in ALL_CAPS
+- `file_names` must be in snake_case._
+
 ## Performance Metrics
 
 ## Setup

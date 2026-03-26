@@ -125,12 +125,6 @@ files({
     "TODO.md"
 })
 
-vpaths {
-    ["Source"] = "Source/**.cpp",
-    ["Include"] = "Include/**.hpp",
-    ["Documentation"] = { "README.md", "TODO.md" },
-}
-
 group("")
 
 group("Dependencies")
