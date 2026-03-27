@@ -7,8 +7,8 @@ configurations({
     "Release",
 })
 
-targetdir("bin/%{cfg.buildcfg}-%{cfg.system}")
-objdir("bin-int/%{cfg.buildcfg}-%{cfg.system}")
+targetdir("bin/%{cfg.buildcfg}")
+objdir("bin-int/%{cfg.buildcfg}")
 
 filter("configurations:Debug")
 defines({ "DEBUG" })
