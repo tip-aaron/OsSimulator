@@ -18,3 +18,49 @@ TEST_F(MglruTest, BasicEvictionWhenMemoryFull) {
   EXPECT_FALSE(manager->accessAddress(oldestAddress));
   EXPECT_TRUE(manager->accessAddress(overflowingAddress));
 }
+
+TEST_F(MglruTest, EvictionRespectsReferencedPages) {
+  for (uint32_t i = 0; i < PHYSICAL_FRAME_COUNT; ++i) {
+    manager->handlePageFault(i * PAGE_SIZE_BYTES);
+  }
+
+  uint64_t savedAddress = 0;
+  uint64_t doomedAddress = 1 * PAGE_SIZE_BYTES;
+
+  EXPECT_TRUE(manager->accessAddress(savedAddress));
+
+  manager->ageGenerations();
+
+  uint64_t overflowingAddress = PHYSICAL_FRAME_COUNT * PAGE_SIZE_BYTES;
+
+  manager->handlePageFault(overflowingAddress);
+
+  EXPECT_FALSE(manager->accessAddress(doomedAddress));
+  EXPECT_TRUE(manager->accessAddress(savedAddress));
+  EXPECT_TRUE(manager->accessAddress(overflowingAddress));
+}
+
+TEST_F(MglruTest, EvictsFromOldestGeneration) {
+  // 1. Fill up all physical memory to the brim
+  for (uint32_t i = 0; i < PHYSICAL_FRAME_COUNT; ++i) {
+    manager->handlePageFault(i * PAGE_SIZE_BYTES);
+  }
+
+  for (uint32_t i = 0; i < manager->NUM_GENERATIONS; ++i) {
+    manager->ageGenerations();
+  }
+
+  uint64_t savedAddress = 0;
+  uint64_t doomedAddress = 1 * PAGE_SIZE_BYTES;
+
+  EXPECT_TRUE(manager->accessAddress(savedAddress));
+  manager->ageGenerations();
+
+  uint64_t overflowingAddress = PHYSICAL_FRAME_COUNT * PAGE_SIZE_BYTES;
+
+  manager->handlePageFault(overflowingAddress);
+
+  EXPECT_TRUE(manager->accessAddress(overflowingAddress));
+  EXPECT_TRUE(manager->accessAddress(savedAddress));
+  EXPECT_FALSE(manager->accessAddress(doomedAddress));
+}

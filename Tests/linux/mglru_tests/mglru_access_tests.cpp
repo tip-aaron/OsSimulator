@@ -12,6 +12,7 @@ TEST_F(MglruTest, HandlePageFaultBringsPageIntoMemory) {
   uint64_t address = 0x1000;
 
   EXPECT_FALSE(manager->accessAddress(address));
+
   manager->handlePageFault(address);
   EXPECT_TRUE(manager->accessAddress(address));
 

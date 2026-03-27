@@ -1,5 +1,7 @@
 #include <algorithm>
 #include <limits>
+#include <stdexcept>
+#include <string>
 
 #include "linux_scheduler.hpp"
 
@@ -68,7 +70,7 @@ void os_simulation_linux_scheduler::LinuxCfsScheduler::addTick() {
       continue;
     }
 
-    if (node.mVruntime < minVruntime) {
+    if (node.mVruntime <= minVruntime) {
       minVruntime = node.mVruntime;
       nextNode = &node;
     }
@@ -98,4 +100,16 @@ bool os_simulation_linux_scheduler::LinuxCfsScheduler::isFinished() const {
   }
 
   return true;
+}
+
+const os_simulation_process::Process&
+os_simulation_linux_scheduler::LinuxCfsScheduler::getProcess(int id) const {
+  for (const auto& node : mNodes) {
+    if (node.process.getId() == id) {
+      return node.process;
+    }
+  }
+
+  throw std::runtime_error("Process with ID " + std::to_string(id) +
+                           " not found in scheduler");
 }

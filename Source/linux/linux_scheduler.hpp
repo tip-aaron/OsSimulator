@@ -75,5 +75,8 @@ class LinuxCfsScheduler : public os_simulation_scheduler::IScheduler {
   void addProcess(const os_simulation_process::Process& p) override;
   void addTick() override;
   [[nodiscard]] bool isFinished() const override;
+
+  // Add this to the public section of LinuxCfsScheduler
+  [[nodiscard]] const os_simulation_process::Process& getProcess(int id) const;
 };
 }  // namespace os_simulation_linux_scheduler
