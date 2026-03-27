@@ -12,7 +12,7 @@ namespace os_simulation_memory {
 class MglruMemoryManager : public IMemoryManager {
  public:
   static constexpr int NUM_GENERATIONS = 4;
-  
+
   /**
    * Explicit to prevent implicit conversions,
    * ensuring the caller must explicitly provide a MemoryMetrics
@@ -20,7 +20,7 @@ class MglruMemoryManager : public IMemoryManager {
    * making the code clearer and preventing unintended conversions.
    */
   explicit MglruMemoryManager(
-      os_simulation_metrics::MemoryMetrics &memoryMetrics);
+      os_simulation_metrics::MemoryMetrics& memoryMetrics);
   ~MglruMemoryManager() override = default;
 
   /**
@@ -55,7 +55,7 @@ class MglruMemoryManager : public IMemoryManager {
 
   uint32_t mFreeFrames;
 
-  os_simulation_metrics::MemoryMetrics &mMemoryMetrics;
+  os_simulation_metrics::MemoryMetrics& mMemoryMetrics;
 
   [[nodiscard]] uint64_t getVpn(uint64_t virtualAddress) const;
 

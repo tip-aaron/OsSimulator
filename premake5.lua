@@ -154,19 +154,21 @@ language("C++")
 cppdialect("C++23")
 
 includedirs({
+    "Source",
     "Include",
     "vendor/googletest/googletest/include",
 })
 
 files({
-    "Tests/**.cpp",
-    "Tests/**.hpp",
-    "Source/**.hpp",
-    "Source/utils/**.cpp",
-    "Source/utils/**.hpp",
-    "Source/windows/**.cpp",
-    "Source/windows/**.hpp",
-    "Include/**.hpp",
+    "Tests/**/*.cpp",
+    "Tests/**/*.hpp",
+    "Tests/**/*",
+    "Source/**/*.hpp",
+    "Source/utils/**/*.cpp",
+    "Source/utils/**/*.hpp",
+    "Source/windows/**/*.cpp",
+    "Source/windows/**/*.hpp",
+    "Include/**/*.hpp",
 })
 
 removefiles({ "Source/main.cpp" })
@@ -185,19 +187,20 @@ language("C++")
 cppdialect("C++23")
 
 includedirs({
+    "Source",
     "Include",
     "vendor/googletest/googletest/include",
 })
 
 files({
-    "Tests/**.cpp",
-    "Tests/**.hpp",
-    "Source/**.hpp",
-    "Source/utils/**.cpp",
-    "Source/utils/**.hpp",
-    "Source/linux/**.cpp",
-    "Source/linux/**.hpp",
-    "Include/**.hpp",
+    "Tests/**/*.cpp",
+    "Tests/**/*.hpp",
+    "Source/**/*.hpp",
+    "Source/utils/**/*.cpp",
+    "Source/utils/**/*.hpp",
+    "Source/linux/**/*.cpp",
+    "Source/linux/**/*.hpp",
+    "Include/**/*.hpp",
 })
 
 removefiles({ "Source/main.cpp" })

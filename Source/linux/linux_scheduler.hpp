@@ -61,7 +61,7 @@ struct CfsNode {
   uint32_t mInverseWeight{0};
 
   // explicit to avoid implicit conversions of Process.
-  explicit CfsNode(const os_simulation_process::Process &p);
+  explicit CfsNode(const os_simulation_process::Process& p);
 };
 }  // namespace
 
@@ -74,7 +74,7 @@ class LinuxCfsScheduler : public os_simulation_scheduler::IScheduler {
                             uint64_t inverseWeight);
 
  public:
-  void addProcess(const os_simulation_process::Process &p) override;
+  void addProcess(const os_simulation_process::Process& p) override;
   void addTick() override;
   [[nodiscard]] bool isFinished() const override;
 };
