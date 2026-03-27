@@ -82,3 +82,62 @@ Please follow the steps carefully to ensure a successful setup.
 - Visualizing saved data
   - The application saves data in a specific format (e.g., JSON, CSV, or binary). You can use tools like Excel, Python scripts, or custom visualization software to analyze and visualize this data.
   - For running our own visualizer, you can execute the `main.py` script in `visualizer/` using **Python**.
+
+## Developing
+
+- If you add new files, make sure to rerun `scripts/premake.bat` or `scripts/premake.sh` to update the project files, then recompile the project using your IDE or command line.
+- For using `VsCode` with `Make`, you can run the following command in the terminal:
+
+```bash
+make LinuxSimulator WindowsSimulator
+```
+
+- To run the tests, you can run the scripts `scripts/test.bat` or `scripts/test.sh` depending on your operating system.
+
+- If you add new folders, make sure to update `premake5.lua` to include those folders in the project files. For example, if you added a new folder in `Source` like a `lib` folder, you would need to go into `premake5.lua` and find something like this:
+
+```lua
+files({
+    "Source/*.hpp",
+    "Source/*.cpp",
+    "Source/windows/*.cpp",
+    "Source/windows/*.hpp",
+    "Source/utils/*.cpp",
+    "Source/utils/*.hpp",
+    "Include/**/*.hpp",
+    "README.md",
+    "TODO.md",
+    "WORKLOADS.md"
+})
+```
+
+and add the new folder like this:
+
+```lua
+files({
+    "Source/*.hpp",
+    "Source/*.cpp",
+    "Source/windows/*.cpp",
+    "Source/windows/*.hpp",
+    "Source/utils/*.cpp",
+    "Source/utils/*.hpp",
+    "Include/**/*.hpp",
+    "README.md",
+    "TODO.md",
+    "WORKLOADS.md",
+    -- Added new folder
+    "Source/lib/*.cpp",
+    "Source/lib/*.hpp"
+    "Source/lib/**/*.cpp",
+    "Source/lib/**/*.hpp"
+})
+```
+
+Make sure to add them in all projects `WindowsSimulator`, `LinuxSimulator`, `TestLinuxSimulator` and `TestWindowsSimulator` if you use them in all of them.
+
+A project is defined in `premake5.lua` like this:
+
+```lua
+project("WindowsSimulator")
+-- Project configuration for Windows Simulator
+```
