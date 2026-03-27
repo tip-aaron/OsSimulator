@@ -36,7 +36,9 @@ static int __convPriorityToNice(int priority) {
 uint64_t os_simulation_linux_scheduler::LinuxCfsScheduler::calcDelta(
     uint64_t deltaExec, uint64_t weight, uint64_t inverseWeight) {
   if (weight != os_simulation_linux_scheduler_math::NICE_0_LOAD) [[unlikely]] {
-    deltaExec = __calcDelta(deltaExec, weight, inverseWeight);
+    deltaExec =
+        __calcDelta(deltaExec, os_simulation_linux_scheduler_math::NICE_0_LOAD,
+                    inverseWeight);
   }
 
   return deltaExec;
@@ -56,6 +58,8 @@ os_simulation_linux_scheduler::LinuxCfsScheduler::CfsNode::CfsNode(
 void os_simulation_linux_scheduler::LinuxCfsScheduler::addProcess(
     const os_simulation_process::Process& p) {
   mNodes.emplace_back(p);
+
+  mNodes.back().mVruntime = mNodes.back().mInverseWeight;
 }
 
 void os_simulation_linux_scheduler::LinuxCfsScheduler::addTick() {
@@ -70,7 +74,7 @@ void os_simulation_linux_scheduler::LinuxCfsScheduler::addTick() {
       continue;
     }
 
-    if (node.mVruntime <= minVruntime) {
+    if (node.mVruntime < minVruntime) {
       minVruntime = node.mVruntime;
       nextNode = &node;
     }
@@ -83,7 +87,7 @@ void os_simulation_linux_scheduler::LinuxCfsScheduler::addTick() {
   nextNode->process.setStartTime(mCurrentTime - 1);
   nextNode->process.addTick();
 
-  uint64_t deltaExec = 1;
+  uint64_t deltaExec = 1'000'000;
   nextNode->mVruntime +=
       calcDelta(deltaExec, nextNode->mWeight, nextNode->mInverseWeight);
 
