@@ -58,7 +58,7 @@ ProcessWorkload WorkloadParser::parseCsvLine(const std::string& line,
     int arrival = std::stoi(arrivalStr);
 
     // Construct the expected trace file path
-    fs::path traceFile = tracesDir / (idStr + ".ref");
+    fs::path traceFile = tracesDir / ("process" + idStr + ".ref");
 
     if (!fs::exists(traceFile)) {
       std::cerr << "Warning: Missing trace file for Process ID " << id << " at "
