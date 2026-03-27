@@ -100,12 +100,6 @@ files({
     "WORKLOADS.md"
 })
 
-vpaths {
-    ["Source"] = "Source/**.cpp",
-    ["Include"] = "Include/**.hpp",
-    ["Documentation"] = { "README.md", "TODO.md" },
-}
-
 project("LinuxSimulator")
 kind("ConsoleApp")
 language("C++")
@@ -160,7 +154,7 @@ language("C++")
 cppdialect("C++23")
 
 includedirs({
-    "include",
+    "Include",
     "vendor/googletest/googletest/include",
 })
 
@@ -191,7 +185,7 @@ language("C++")
 cppdialect("C++23")
 
 includedirs({
-    "include",
+    "Include",
     "vendor/googletest/googletest/include",
 })
 
