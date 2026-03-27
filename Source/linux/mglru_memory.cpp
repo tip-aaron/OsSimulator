@@ -1,0 +1,101 @@
+#include "mglru_memory.hpp"
+
+#include <algorithm>
+#include <architecture_config.hpp>
+#include <iterator>
+
+os_simulation_memory::MglruMemoryManager::MglruMemoryManager(
+    os_simulation_metrics::MemoryMetrics& memoryMetrics)
+    : mFreeFrames(os_simulation_architecture::PHYSICAL_FRAME_COUNT),
+      mMemoryMetrics(memoryMetrics) {
+  mGenerations.resize(NUM_GENERATIONS);
+}
+
+uint64_t os_simulation_memory::MglruMemoryManager::getVpn(
+    uint64_t virtualAddress) const {
+  return virtualAddress / os_simulation_architecture::PAGE_SIZE_BYTES;
+}
+
+bool os_simulation_memory::MglruMemoryManager::accessAddress(
+    uint64_t virtualAddress) {
+  uint64_t vpn = getVpn(virtualAddress);
+  auto it = mPageTable.find(vpn);
+
+  if (it != mPageTable.end()) {
+    mMemoryMetrics.recordAccess(false);
+
+    it->second.mReferenced = true;
+
+    return true;
+  }
+
+  mMemoryMetrics.recordAccess(true);
+
+  return false;
+}
+
+void os_simulation_memory::MglruMemoryManager::handlePageFault(
+    uint64_t virtualAddress) {
+  uint64_t vpn = getVpn(virtualAddress);
+
+  if (mFreeFrames == 0) {
+    evictPage();
+  } else {
+    mFreeFrames--;
+  }
+
+  mGenerations[0].push_front(vpn);
+
+  mPageTable.emplace(vpn,
+                     PageEntry{/* .mGeneration = */ 0,
+                               /* .mReferenced = */ false,
+                               /* .mListIterator = */ mGenerations[0].begin()});
+}
+
+void os_simulation_memory::MglruMemoryManager::ageGenerations() {
+  std::vector<std::list<uint64_t>> nextGenerations(NUM_GENERATIONS);
+
+  for (int g = 0; g < NUM_GENERATIONS; ++g) {
+    auto it = mGenerations[g].begin();
+
+    while (it != mGenerations[g].end()) {
+      const uint64_t vpn = *it;
+      auto& entry = mPageTable.at(vpn);
+      auto next_it = std::next(it);
+
+      if (entry.mReferenced) {
+        entry.mGeneration = 0;
+        entry.mReferenced = false;
+
+        mGenerations[0].splice(nextGenerations[0].begin(), mGenerations[g], it);
+      } else {
+        const int nextGen = std::min(g + 1, NUM_GENERATIONS - 1);
+        entry.mGeneration = nextGen;
+
+        nextGenerations[nextGen].splice(nextGenerations[nextGen].end(),
+                                        mGenerations[g], it);
+      }
+
+      it = next_it;
+    }
+  }
+
+  mGenerations = std::move(nextGenerations);
+}
+
+void os_simulation_memory::MglruMemoryManager::evictPage() {
+  for (int g = NUM_GENERATIONS - 1; g >= 0; --g) {
+    if (mGenerations[g].empty()) {
+      continue;
+    }
+
+    const uint64_t vpnToEvict = mGenerations[g].back();
+
+    mPageTable.erase(vpnToEvict);
+    mGenerations[g].pop_back();
+
+    mFreeFrames++;
+
+    return;
+  }
+}

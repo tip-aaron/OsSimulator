@@ -56,13 +56,12 @@ namespace {
 struct CfsNode {
   os_simulation_process::Process process;
 
-  // Exact Linux Kernel Types (No Floating Point!)
-  uint64_t vruntime{0};
-  uint32_t weight{0};
-  uint32_t inverseWeight{0};
+  uint64_t mVruntime{0};
+  uint32_t mWeight{0};
+  uint32_t mInverseWeight{0};
 
   // explicit to avoid implicit conversions of Process.
-  explicit CfsNode(const os_simulation_process::Process& p);
+  explicit CfsNode(const os_simulation_process::Process &p);
 };
 }  // namespace
 
@@ -71,12 +70,11 @@ class LinuxCfsScheduler : public os_simulation_scheduler::IScheduler {
   std::vector<CfsNode> mNodes;
   int mCurrentTime{0};
 
-  // Pure kernel math function
   static uint64_t calcDelta(uint64_t deltaExec, uint64_t weight,
                             uint64_t inverseWeight);
 
  public:
-  void addProcess(const os_simulation_process::Process& p) override;
+  void addProcess(const os_simulation_process::Process &p) override;
   void addTick() override;
   [[nodiscard]] bool isFinished() const override;
 };
