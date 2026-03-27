@@ -68,6 +68,10 @@ class LinuxCfsScheduler : public os_simulation_scheduler::IScheduler {
   std::vector<CfsNode> mNodes;
   int mCurrentTime{0};
 
+  void updateProcessStates();
+  CfsNode* selectNextProcess();
+  void executeProcess(CfsNode* node);
+
   static uint64_t calcDelta(uint64_t deltaExec, uint64_t weight,
                             uint64_t inverseWeight);
 

@@ -1,6 +1,8 @@
 #pragma once
 
 namespace os_simulation_process {
+enum class ProcessState { NEW, READY, RUNNING, BLOCKED, TERMINATED };
+
 struct Process {
  private:
   int mId;
@@ -21,6 +23,9 @@ struct Process {
   int mStartTime{-1};
   int mCompletionTime{0};
 
+  ProcessState mState{ProcessState::NEW};
+  int mIoWaitTime{0};
+
  public:
   Process(int processId, int procPriority, int totalBurst, int arrival)
       : mId(processId),
@@ -37,9 +42,26 @@ struct Process {
 
   void setCompletionTime(int time) { mCompletionTime = time; }
 
+  void setState(ProcessState newState) { mState = newState; }
+
+  void block(int ticks) {
+    mState = ProcessState::BLOCKED;
+    mIoWaitTime = ticks;
+  }
+
   void addTick() {
-    if (mRemainingTime > 0) {
+    if (mState == ProcessState::RUNNING && mRemainingTime > 0) {
       mRemainingTime--;
+
+      if (mRemainingTime == 0) {
+        mState = ProcessState::TERMINATED;
+      }
+    } else if (mState == ProcessState::BLOCKED && mIoWaitTime > 0) {
+      mIoWaitTime--;
+
+      if (mIoWaitTime == 0) {
+        mState = ProcessState::READY;
+      }
     }
   }
 
@@ -50,7 +72,10 @@ struct Process {
   [[nodiscard]] int getRemainingTime() const { return mRemainingTime; }
   [[nodiscard]] int getStartTime() const { return mStartTime; }
   [[nodiscard]] int getCompletionTime() const { return mCompletionTime; }
+  [[nodiscard]] ProcessState getState() const { return mState; }
 
-  [[nodiscard]] bool isFinished() const { return mRemainingTime == 0; }
+  [[nodiscard]] bool isFinished() const {
+    return mState == ProcessState::TERMINATED;
+  }
 };
 }  // namespace os_simulation_process

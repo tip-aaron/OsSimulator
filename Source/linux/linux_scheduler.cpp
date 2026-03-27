@@ -1,11 +1,10 @@
+#include "linux_scheduler.hpp"
+
 #include <algorithm>
 #include <limits>
 #include <stdexcept>
 #include <string>
 
-#include "linux_scheduler.hpp"
-
-namespace {
 static uint64_t __calcDelta(uint64_t deltaExec, uint64_t weight,
                             uint64_t inverseWeight) {
   uint64_t fairnessCt = weight * inverseWeight;
@@ -31,8 +30,6 @@ static int __convPriorityToNice(int priority) {
   return -20 + (std::clamp(priority, 1, 10) - 1) * 39 / 9;
 }
 
-}  // namespace
-
 uint64_t os_simulation_linux_scheduler::LinuxCfsScheduler::calcDelta(
     uint64_t deltaExec, uint64_t weight, uint64_t inverseWeight) {
   if (weight != os_simulation_linux_scheduler_math::NICE_0_LOAD) [[unlikely]] {
@@ -55,44 +52,75 @@ os_simulation_linux_scheduler::LinuxCfsScheduler::CfsNode::CfsNode(
       os_simulation_linux_scheduler_math::SCHED_PRIO_TO_WMULT[arrIndex];
 }
 
+void os_simulation_linux_scheduler::LinuxCfsScheduler::updateProcessStates() {
+  for (auto& rNode : mNodes) {
+    auto& rProcess = rNode.process;
+
+    if ((rProcess.getState() == os_simulation_process::ProcessState::NEW &&
+         rProcess.getArrivalTime() <= mCurrentTime) ||
+        rProcess.getState() == os_simulation_process::ProcessState::RUNNING) {
+      rProcess.setState(os_simulation_process::ProcessState::READY);
+    } else if (rProcess.getState() ==
+               os_simulation_process::ProcessState::BLOCKED) {
+      rProcess.addTick();
+    }
+  }
+}
+
+os_simulation_linux_scheduler::LinuxCfsScheduler::CfsNode*
+os_simulation_linux_scheduler::LinuxCfsScheduler::selectNextProcess() {
+  CfsNode* pNextNode = nullptr;
+  uint64_t minVruntime = std::numeric_limits<uint64_t>::max();
+
+  for (auto& rNode : mNodes) {
+    if (rNode.process.getState() !=
+            os_simulation_process::ProcessState::READY ||
+        rNode.mVruntime >= minVruntime) {
+      continue;
+    }
+
+    minVruntime == rNode.mVruntime;
+    pNextNode = &rNode;
+  }
+
+  return pNextNode;
+}
+
+void os_simulation_linux_scheduler::LinuxCfsScheduler::executeProcess(
+    os_simulation_linux_scheduler::LinuxCfsScheduler::CfsNode* pNode) {
+  pNode->process.setState(os_simulation_process::ProcessState::RUNNING);
+  pNode->process.setStartTime(mCurrentTime - 1);
+  pNode->process.addTick();
+
+  uint64_t deltaExecNs = 1'000'000;
+
+  pNode->mVruntime +=
+      calcDelta(deltaExecNs, pNode->mWeight, pNode->mInverseWeight);
+
+  if (pNode->process.isFinished()) {
+    pNode->process.setCompletionTime(mCurrentTime);
+  }
+}
+
 void os_simulation_linux_scheduler::LinuxCfsScheduler::addProcess(
     const os_simulation_process::Process& p) {
   mNodes.emplace_back(p);
 
+  // Initialize vruntime. (Processes start in ProcessState::NEW by default)
   mNodes.back().mVruntime = mNodes.back().mInverseWeight;
 }
 
 void os_simulation_linux_scheduler::LinuxCfsScheduler::addTick() {
   mCurrentTime++;
 
-  os_simulation_linux_scheduler::LinuxCfsScheduler::CfsNode* nextNode = nullptr;
-  uint64_t minVruntime = std::numeric_limits<uint64_t>::max();
+  updateProcessStates();
 
-  for (auto& node : mNodes) {
-    if (node.process.isFinished() ||
-        node.process.getArrivalTime() >= mCurrentTime) {
-      continue;
-    }
+  CfsNode* nextNode = selectNextProcess();
 
-    if (node.mVruntime < minVruntime) {
-      minVruntime = node.mVruntime;
-      nextNode = &node;
-    }
-  }
-
-  if (nextNode == nullptr) {
-    return;
-  }
-
-  nextNode->process.setStartTime(mCurrentTime - 1);
-  nextNode->process.addTick();
-
-  uint64_t deltaExec = 1'000'000;
-  nextNode->mVruntime +=
-      calcDelta(deltaExec, nextNode->mWeight, nextNode->mInverseWeight);
-
-  if (nextNode->process.isFinished()) {
-    nextNode->process.setCompletionTime(mCurrentTime);
+  // If we have a process ready to run, execute it for this tick.
+  // Otherwise, the CPU idles.
+  if (nextNode != nullptr) {
+    executeProcess(nextNode);
   }
 }
 
