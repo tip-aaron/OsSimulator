@@ -96,7 +96,8 @@ files({
     "Source/windows/**.hpp",
     "Include/**.hpp",
     "README.md",
-    "TODO.md"
+    "TODO.md",
+    "WORKLOADS.md"
 })
 
 vpaths {
@@ -116,13 +117,15 @@ includedirs({
 
 files({
     "Source/main.cpp",
+    "Source/**.hpp",
     "Source/utils/**.cpp",
     "Source/utils/**.hpp",
     "Source/linux/**.cpp",
     "Source/linux/**.hpp",
     "Include/**.hpp",
     "README.md",
-    "TODO.md"
+    "TODO.md",
+    "WORKLOADS.md"
 })
 
 group("")
@@ -163,8 +166,13 @@ includedirs({
 
 files({
     "Tests/**.cpp",
+    "Tests/**.hpp",
+    "Source/**.hpp",
     "Source/utils/**.cpp",
+    "Source/utils/**.hpp",
     "Source/windows/**.cpp",
+    "Source/windows/**.hpp",
+    "Include/**.hpp",
 })
 
 removefiles({ "Source/main.cpp" })
@@ -189,8 +197,13 @@ includedirs({
 
 files({
     "Tests/**.cpp",
+    "Tests/**.hpp",
+    "Source/**.hpp",
     "Source/utils/**.cpp",
+    "Source/utils/**.hpp",
     "Source/linux/**.cpp",
+    "Source/linux/**.hpp",
+    "Include/**.hpp",
 })
 
 removefiles({ "Source/main.cpp" })
