@@ -1,11 +1,11 @@
-#include "mglru_test_fixture.h"
+#include "mglru_test_fixture.hpp"
 
 TEST_F(MglruTest, InitialAccessCausesPageFault) {
   uint64_t address = 0x1000;
 
   EXPECT_FALSE(manager->accessAddress(address));
-  EXPECT_EQ(memoryMetrics.getTotalPageFaults(), 1);
-  EXPECT_EQ(memoryMetrics.getTotalAccesses(), 1);
+  EXPECT_EQ(memoryMetrics.getTotalPageFaults(), 1u);
+  EXPECT_EQ(memoryMetrics.getTotalAccesses(), 1u);
 }
 
 TEST_F(MglruTest, HandlePageFaultBringsPageIntoMemory) {
@@ -15,6 +15,6 @@ TEST_F(MglruTest, HandlePageFaultBringsPageIntoMemory) {
   manager->handlePageFault(address);
   EXPECT_TRUE(manager->accessAddress(address));
 
-  EXPECT_EQ(memoryMetrics.getTotalPageFaults(), 1);
-  EXPECT_EQ(memoryMetrics.getTotalAccesses(), 2);
+  EXPECT_EQ(memoryMetrics.getTotalPageFaults(), 1u);
+  EXPECT_EQ(memoryMetrics.getTotalAccesses(), 2u);
 }

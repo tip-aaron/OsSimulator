@@ -40,7 +40,7 @@ uint64_t os_simulation_linux_scheduler::LinuxCfsScheduler::calcDelta(
   return deltaExec;
 }
 
-os_simulation_linux_scheduler::CfsNode::CfsNode(
+os_simulation_linux_scheduler::LinuxCfsScheduler::CfsNode::CfsNode(
     const os_simulation_process::Process& p)
     : process(p) {
   int niceValue = __convPriorityToNice(process.getPriority());
@@ -59,7 +59,7 @@ void os_simulation_linux_scheduler::LinuxCfsScheduler::addProcess(
 void os_simulation_linux_scheduler::LinuxCfsScheduler::addTick() {
   mCurrentTime++;
 
-  os_simulation_linux_scheduler::CfsNode* nextNode = nullptr;
+  os_simulation_linux_scheduler::LinuxCfsScheduler::CfsNode* nextNode = nullptr;
   uint64_t minVruntime = std::numeric_limits<uint64_t>::max();
 
   for (auto& node : mNodes) {

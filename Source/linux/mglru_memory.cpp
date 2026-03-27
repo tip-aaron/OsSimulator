@@ -72,8 +72,8 @@ void os_simulation_memory::MglruMemoryManager::ageGenerations() {
         const int nextGen = std::min(g + 1, NUM_GENERATIONS - 1);
         entry.mGeneration = nextGen;
 
-        nextGenerations[nextGen].splice(nextGenerations[nextGen].end(),
-                                        mGenerations[g], it);
+        mGenerations[nextGen].splice(nextGenerations[nextGen].end(),
+                                     mGenerations[g], it);
       }
 
       it = next_it;

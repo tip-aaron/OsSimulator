@@ -1,4 +1,4 @@
-#include "mglru_test_fixture.h"
+#include "mglru_test_fixture.hpp"
 
 TEST_F(MglruTest, BasicEvictionWhenMemoryFull) {
   for (uint32_t i = 0; i < PHYSICAL_FRAME_COUNT; ++i) {

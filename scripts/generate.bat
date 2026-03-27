@@ -80,6 +80,8 @@ python -m venv visualizer\.venv || (
     EXIT /B 1
 )
 
+SETLOCAL
+
 ECHO Activating Python virtual environment and installing dependencies...
 CALL visualizer\.venv\Scripts\activate.bat || (
     ECHO Error: Failed to activate virtual environment.
@@ -94,6 +96,8 @@ pip install -r visualizer\requirements.txt || (
     EXIT /B 1
 )
 
+ENDLOCAL
+
 ECHO.
 ECHO Setting up workloads generator...
 python -m venv workload_generator\.venv || (
@@ -101,6 +105,8 @@ python -m venv workload_generator\.venv || (
     PAUSE
     EXIT /B 1
 )
+
+SETLOCAL
 
 ECHO Activating Python virtual environment and installing dependencies...
 CALL workload_generator\.venv\Scripts\activate.bat || (
@@ -122,6 +128,8 @@ python workload_generator\main.py || (
     PAUSE
     EXIT /B 1
 )
+
+ENDLOCAL
 
 ECHO.
 ECHO Generation complete!

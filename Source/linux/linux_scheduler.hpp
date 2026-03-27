@@ -52,21 +52,19 @@ constexpr uint32_t SCHED_PRIO_TO_WMULT[40] = {
 // === END LINUX KERNEL CODE ===
 
 namespace os_simulation_linux_scheduler {
-namespace {
-struct CfsNode {
-  os_simulation_process::Process process;
-
-  uint64_t mVruntime{0};
-  uint32_t mWeight{0};
-  uint32_t mInverseWeight{0};
-
-  // explicit to avoid implicit conversions of Process.
-  explicit CfsNode(const os_simulation_process::Process& p);
-};
-}  // namespace
-
 class LinuxCfsScheduler : public os_simulation_scheduler::IScheduler {
  private:
+  struct CfsNode {
+    os_simulation_process::Process process;
+
+    uint64_t mVruntime{0};
+    uint32_t mWeight{0};
+    uint32_t mInverseWeight{0};
+
+    // explicit to avoid implicit conversions of Process.
+    explicit CfsNode(const os_simulation_process::Process& p);
+  };
+
   std::vector<CfsNode> mNodes;
   int mCurrentTime{0};
 

@@ -15,12 +15,13 @@ defines({ "DEBUG" })
 symbols("On")
 
 filter("system:windows")
-systemversion("latest")
-buildoptions({ "/std:c++latest", "/Zc:__cplusplus" })
+    systemversion("latest")
 
-filter("system:linux or system:macosx")
-buildoptions({ "-std=c++23", "-Wall", "-Wextra" })
+filter("action:vs* or toolset:msc")
+    buildoptions({ "/Zc:__cplusplus" })
 
+filter("toolset:gcc or toolset:clang")
+    buildoptions({ "-Wall", "-Wextra" })
 filter("{}")
 newaction {
     trigger     = "clean_build",
@@ -89,12 +90,13 @@ includedirs({
 })
 
 files({
-    "Source/main.cpp",
-    "Source/utils/**.cpp",
-    "Source/utils/**.hpp",
-    "Source/windows/**.cpp",
-    "Source/windows/**.hpp",
-    "Include/**.hpp",
+    "Source/*.hpp",
+    "Source/*.cpp",
+    "Source/windows/*.cpp",
+    "Source/windows/*.hpp",
+    "Source/utils/*.cpp",
+    "Source/utils/*.hpp",
+    "Include/**/*.hpp",
     "README.md",
     "TODO.md",
     "WORKLOADS.md"
@@ -110,13 +112,13 @@ includedirs({
 })
 
 files({
-    "Source/main.cpp",
-    "Source/**.hpp",
-    "Source/utils/**.cpp",
-    "Source/utils/**.hpp",
-    "Source/linux/**.cpp",
-    "Source/linux/**.hpp",
-    "Include/**.hpp",
+    "Source/*.hpp",
+    "Source/*.cpp",
+    "Source/linux/*.cpp",
+    "Source/linux/*.hpp",
+    "Source/utils/*.cpp",
+    "Source/utils/*.hpp",
+    "Include/**/*.hpp",
     "README.md",
     "TODO.md",
     "WORKLOADS.md"
@@ -153,22 +155,29 @@ kind("ConsoleApp")
 language("C++")
 cppdialect("C++23")
 
+
 includedirs({
     "Source",
+    "Source/windows",
+    "Source/utils",
     "Include",
     "vendor/googletest/googletest/include",
 })
 
+
 files({
-    "Tests/**/*.cpp",
-    "Tests/**/*.hpp",
-    "Tests/**/*",
-    "Source/**/*.hpp",
-    "Source/utils/**/*.cpp",
-    "Source/utils/**/*.hpp",
-    "Source/windows/**/*.cpp",
-    "Source/windows/**/*.hpp",
-    "Include/**/*.hpp",
+    "Tests/main.cpp",
+    "Tests/*.cpp",
+    "Tests/*.hpp",
+    "Tests/windows/*.cpp",
+    "Tests/windows/*.hpp",
+    "Tests/windows/**/*.cpp",
+    "Tests/windows/**/*.hpp",
+    "Source/windows/*.cpp",
+    "Source/windows/*.hpp",
+    "Source/utils/*.cpp",
+    "Source/utils/*.hpp",
+    "Include/**/*.hpp"
 })
 
 removefiles({ "Source/main.cpp" })
@@ -188,19 +197,26 @@ cppdialect("C++23")
 
 includedirs({
     "Source",
+    "Source/linux",
+    "Source/utils",
     "Include",
     "vendor/googletest/googletest/include",
 })
 
+
 files({
-    "Tests/**/*.cpp",
-    "Tests/**/*.hpp",
-    "Source/**/*.hpp",
-    "Source/utils/**/*.cpp",
-    "Source/utils/**/*.hpp",
-    "Source/linux/**/*.cpp",
-    "Source/linux/**/*.hpp",
-    "Include/**/*.hpp",
+    "Tests/main.cpp",
+    "Tests/*.cpp",
+    "Tests/*.hpp",
+    "Tests/linux/*.cpp",
+    "Tests/linux/*.hpp",
+    "Tests/linux/**/*.cpp",
+    "Tests/linux/**/*.hpp",
+    "Source/linux/*.cpp",
+    "Source/linux/*.hpp",
+    "Source/utils/*.cpp",
+    "Source/utils/*.hpp",
+    "Include/**/*.hpp"
 })
 
 removefiles({ "Source/main.cpp" })
