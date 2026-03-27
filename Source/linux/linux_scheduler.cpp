@@ -68,7 +68,7 @@ void os_simulation_linux_scheduler::LinuxCfsScheduler::updateProcessStates() {
 }
 
 os_simulation_linux_scheduler::LinuxCfsScheduler::CfsNode*
-os_simulation_linux_scheduler::LinuxCfsScheduler::selectNextProcess() {
+os_simulation_linux_scheduler::LinuxCfsScheduler::selectNextNode() {
   CfsNode* pNextNode = nullptr;
   uint64_t minVruntime = std::numeric_limits<uint64_t>::max();
 
@@ -79,26 +79,46 @@ os_simulation_linux_scheduler::LinuxCfsScheduler::selectNextProcess() {
       continue;
     }
 
-    minVruntime == rNode.mVruntime;
+    minVruntime = rNode.mVruntime;
     pNextNode = &rNode;
   }
 
   return pNextNode;
 }
 
+os_simulation_process::Process*
+os_simulation_linux_scheduler::LinuxCfsScheduler::getNextProcessToRun() {
+  CfsNode* nextNode = selectNextNode();
+
+  if (nextNode != nullptr) {
+    return &(nextNode->process);
+  }
+
+  return nullptr;
+}
+
 void os_simulation_linux_scheduler::LinuxCfsScheduler::executeProcess(
-    os_simulation_linux_scheduler::LinuxCfsScheduler::CfsNode* pNode) {
-  pNode->process.setState(os_simulation_process::ProcessState::RUNNING);
-  pNode->process.setStartTime(mCurrentTime - 1);
-  pNode->process.addTick();
+    os_simulation_process::Process* process) {
+  for (auto& rNode : mNodes) {
+    if (rNode.process.getId() == process->getId()) {
+      rNode.process.setState(os_simulation_process::ProcessState::RUNNING);
 
-  uint64_t deltaExecNs = 1'000'000;
+      if (rNode.process.getStartTime() == -1) {
+        rNode.process.setStartTime(mCurrentTime - 1);
+      }
 
-  pNode->mVruntime +=
-      calcDelta(deltaExecNs, pNode->mWeight, pNode->mInverseWeight);
+      rNode.process.addTick();
 
-  if (pNode->process.isFinished()) {
-    pNode->process.setCompletionTime(mCurrentTime);
+      uint64_t deltaExecNs = 1'000'000;
+      rNode.mVruntime +=
+          calcDelta(deltaExecNs, rNode.mWeight, rNode.mInverseWeight);
+
+      if (rNode.process.isFinished()) {
+        rNode.process.setCompletionTime(mCurrentTime);
+      }
+
+      return;
+    }
   }
 }
 
@@ -112,16 +132,7 @@ void os_simulation_linux_scheduler::LinuxCfsScheduler::addProcess(
 
 void os_simulation_linux_scheduler::LinuxCfsScheduler::addTick() {
   mCurrentTime++;
-
   updateProcessStates();
-
-  CfsNode* nextNode = selectNextProcess();
-
-  // If we have a process ready to run, execute it for this tick.
-  // Otherwise, the CPU idles.
-  if (nextNode != nullptr) {
-    executeProcess(nextNode);
-  }
 }
 
 bool os_simulation_linux_scheduler::LinuxCfsScheduler::isFinished() const {

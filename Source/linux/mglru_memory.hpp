@@ -27,12 +27,14 @@ class MglruMemoryManager : public IMemoryManager {
    * Simulates a memory access.
    * Returns true if page is in memory, false if it causes a page fault.
    */
-  bool accessAddress(uint64_t virtualAddress) override;
+  bool accessAddress(int processId, uint64_t virtualAddress,
+                     MemoryAccessType accessType) override;
 
   /**
    * Handles bringing the page into memory, potentially evicting an older page.
    */
-  void handlePageFault(uint64_t virtualAddress) override;
+  void handlePageFault(int processId, uint64_t virtualAddress,
+                       MemoryAccessType accessType) override;
 
   /**
    * MGLRU specific: Simulates the kernel's background aging sweep.
@@ -46,6 +48,7 @@ class MglruMemoryManager : public IMemoryManager {
   struct PageEntry {
     int mGeneration;
     bool mReferenced;
+    bool mDirty;
     std::list<uint64_t>::iterator mListIterator;
   };
 

@@ -29,23 +29,48 @@ struct MemoryMetrics {
   uint32_t mTotalPageFaults{0};
   uint32_t mTotalMemoryAccesses{0};
 
+  std::unordered_map<int, uint32_t> mPageFaultsPerProcess;
+
  public:
-  void recordAccess(bool isPageFault) {
+  void recordAccess(int processId, bool isPageFault) {
     mTotalMemoryAccesses++;
 
     if (isPageFault) {
       mTotalPageFaults++;
+      mPageFaultsPerProcess[processId]++;
+    } else {
+      // Ensure the process is at least registered in the map even if it
+      // hasn't faulted
+      if (mPageFaultsPerProcess.find(processId) ==
+          mPageFaultsPerProcess.end()) {
+        mPageFaultsPerProcess[processId] = 0;
+      }
     }
   }
 
   [[nodiscard]] uint32_t getTotalPageFaults() const { return mTotalPageFaults; }
+
   [[nodiscard]] uint32_t getTotalAccesses() const {
     return mTotalMemoryAccesses;
   }
+
   [[nodiscard]] double getPageFaultRate() const {
     if (mTotalMemoryAccesses == 0) return 0.0;
 
     return static_cast<double>(mTotalPageFaults) / mTotalMemoryAccesses;
+  }
+
+  [[nodiscard]] uint32_t getPageFaultsForProcess(int processId) const {
+    auto it = mPageFaultsPerProcess.find(processId);
+    if (it != mPageFaultsPerProcess.end()) {
+      return it->second;
+    }
+    return 0;
+  }
+
+  [[nodiscard]] const std::unordered_map<int, uint32_t>& getPerProcessFaultMap()
+      const {
+    return mPageFaultsPerProcess;
   }
 };
 

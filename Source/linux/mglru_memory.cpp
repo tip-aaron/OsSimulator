@@ -17,25 +17,29 @@ uint64_t os_simulation_memory::MglruMemoryManager::getVpn(
 }
 
 bool os_simulation_memory::MglruMemoryManager::accessAddress(
-    uint64_t virtualAddress) {
+    int processId, uint64_t virtualAddress, MemoryAccessType accessType) {
   uint64_t vpn = getVpn(virtualAddress);
   auto it = mPageTable.find(vpn);
 
   if (it != mPageTable.end()) {
-    mMemoryMetrics.recordAccess(false);
+    mMemoryMetrics.recordAccess(processId, false);
 
     it->second.mReferenced = true;
+
+    if (accessType == MemoryAccessType::WRITE) {
+      it->second.mDirty = true;
+    }
 
     return true;
   }
 
-  mMemoryMetrics.recordAccess(true);
+  mMemoryMetrics.recordAccess(processId, true);
 
   return false;
 }
 
 void os_simulation_memory::MglruMemoryManager::handlePageFault(
-    uint64_t virtualAddress) {
+    int processId, uint64_t virtualAddress, MemoryAccessType accessType) {
   uint64_t vpn = getVpn(virtualAddress);
 
   if (mFreeFrames == 0) {
@@ -46,10 +50,12 @@ void os_simulation_memory::MglruMemoryManager::handlePageFault(
 
   mGenerations[0].push_front(vpn);
 
-  mPageTable.emplace(vpn,
-                     PageEntry{/* .mGeneration = */ 0,
-                               /* .mReferenced = */ false,
-                               /* .mListIterator = */ mGenerations[0].begin()});
+  mPageTable.emplace(
+      vpn,
+      PageEntry{/* .mGeneration   = */ 0,
+                /* .mReferenced   = */ false,
+                /* .mDirty        = */ accessType == MemoryAccessType::WRITE,
+                /* .mListIterator = */ mGenerations[0].begin()});
 }
 
 void os_simulation_memory::MglruMemoryManager::ageGenerations() {
@@ -67,13 +73,14 @@ void os_simulation_memory::MglruMemoryManager::ageGenerations() {
         entry.mGeneration = 0;
         entry.mReferenced = false;
 
-        mGenerations[0].splice(nextGenerations[0].begin(), mGenerations[g], it);
+        nextGenerations[0].splice(nextGenerations[0].begin(), mGenerations[g],
+                                  it);
       } else {
         const int nextGen = std::min(g + 1, NUM_GENERATIONS - 1);
         entry.mGeneration = nextGen;
 
-        mGenerations[nextGen].splice(nextGenerations[nextGen].end(),
-                                     mGenerations[g], it);
+        nextGenerations[nextGen].splice(nextGenerations[nextGen].end(),
+                                        mGenerations[g], it);
       }
 
       it = next_it;

@@ -69,8 +69,6 @@ class LinuxCfsScheduler : public os_simulation_scheduler::IScheduler {
   int mCurrentTime{0};
 
   void updateProcessStates();
-  CfsNode* selectNextProcess();
-  void executeProcess(CfsNode* node);
 
   static uint64_t calcDelta(uint64_t deltaExec, uint64_t weight,
                             uint64_t inverseWeight);
@@ -78,6 +76,11 @@ class LinuxCfsScheduler : public os_simulation_scheduler::IScheduler {
  public:
   void addProcess(const os_simulation_process::Process& p) override;
   void addTick() override;
+
+  CfsNode* selectNextNode();
+  os_simulation_process::Process* getNextProcessToRun() override;
+  void executeProcess(os_simulation_process::Process* process) override;
+
   [[nodiscard]] bool isFinished() const override;
 
   // Add this to the public section of LinuxCfsScheduler
