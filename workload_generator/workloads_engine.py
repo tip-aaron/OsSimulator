@@ -8,14 +8,16 @@ import os
 from config import WorkloadConfiguration
 from memory_traces import gen_locality_trace, gen_scan_trace, gen_loop_trace
 
-def _write_process_and_trace_data(scenario_name: str, process_data: list, trace_data: dict):
+def _write_process_and_trace_data(scenario_name: str, process_data: list, trace_data: dict, read_probability: float) -> None:
     """
     Handles the file I/O operations for saving scenario definitions and memory traces.
+    Appends a Read (R) or Write (W) access type to each memory reference based on the probability.
 
     Args:
         scenario_name: The name used to format the output CSV file.
         process_data: A list of formatted strings containing the CPU attributes.
         trace_data: A dictionary mapping process IDs to their respective memory trace lists.
+        read_probability: The probability (0.0 to 1.0) that a memory access is a read.
     """
 
     scenario_directory = os.path.join(WorkloadConfiguration.DEFAULT_BASE_DIRECTORY, scenario_name)
@@ -31,11 +33,17 @@ def _write_process_and_trace_data(scenario_name: str, process_data: list, trace_
 
     for process_id, trace in trace_data.items():
         trace_filepath = os.path.join(traces_directory, f"process_{process_id}.ref")
+
         with open(trace_filepath, 'w', encoding='utf-8') as trace_file:
             for page in trace:
-                trace_file.write(f"{page}\n")
+                access_type = 'R' if random.random() < read_probability else 'W'
+                hex_address = hex(page)
 
-def gen_interactive(num_processes: int):
+                trace_file.write(f"{access_type} {hex_address}\n")
+
+    print(f"Generated {scenario_name} traces at: {os.path.abspath(traces_directory)}")
+
+def gen_interactive(num_processes: int, is_read_heavy: bool = True) -> None:
     """
     Generates a workload consisting entirely of highly interactive, foreground processes.
 
@@ -47,6 +55,7 @@ def gen_interactive(num_processes: int):
     """
 
     random.seed(WorkloadConfiguration.RANDOM_SEED)
+    read_probability = 0.8 if is_read_heavy else 0.2
 
     current_arrival_time = 0
     process_data = []
@@ -67,9 +76,9 @@ def gen_interactive(num_processes: int):
         process_data.append(f"{process_id},{priority},{burst_time},{current_arrival_time}\n")
         trace_data[process_id] = gen_locality_trace(burst_time, WorkloadConfiguration.MAX_VIRTUAL_PAGES)
 
-    _write_process_and_trace_data("interactive", process_data, trace_data)
+    _write_process_and_trace_data("interactive", process_data, trace_data, read_probability)
 
-def gen_background(num_processes: int):
+def gen_background(num_processes: int, is_read_heavy: bool = True) -> None:
     """
     Generates a workload consisting entirely of long-running, background processes.
 
@@ -81,6 +90,7 @@ def gen_background(num_processes: int):
     """
 
     random.seed(WorkloadConfiguration.RANDOM_SEED)
+    read_probability = 0.8 if is_read_heavy else 0.2
 
     current_arrival_time = 0
     process_data = []
@@ -104,9 +114,9 @@ def gen_background(num_processes: int):
         else:
             trace_data[process_id] = gen_loop_trace(burst_time, WorkloadConfiguration.LOOP_SIZE_LARGE)
 
-    _write_process_and_trace_data("background", process_data, trace_data)
+    _write_process_and_trace_data("background", process_data, trace_data, read_probability)
 
-def gen_mixed_interactive_and_background(num_processes: int):
+def gen_mixed_interactive_and_background(num_processes: int, is_read_heavy: bool = True) -> None:
     """
     Generates a realistic, unified workload combining interactive and background tasks.
 
@@ -118,6 +128,7 @@ def gen_mixed_interactive_and_background(num_processes: int):
     """
 
     random.seed(WorkloadConfiguration.RANDOM_SEED)
+    read_probability = 0.8 if is_read_heavy else 0.2
 
     current_arrival_time = 0
     process_data = []
@@ -147,4 +158,4 @@ def gen_mixed_interactive_and_background(num_processes: int):
         else:
             trace_data[process_id] = gen_locality_trace(burst_time, WorkloadConfiguration.MAX_VIRTUAL_PAGES)
 
-    _write_process_and_trace_data("mixed_interactive_and_background", process_data, trace_data)
+    _write_process_and_trace_data("mixed_interactive_and_background", process_data, trace_data, read_probability)

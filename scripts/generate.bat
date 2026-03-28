@@ -122,13 +122,6 @@ pip install -r workload_generator\requirements.txt || (
     EXIT /B 1
 )
 
-ECHO Running workloads generator to create workloads...
-python workload_generator\main.py || (
-    ECHO Error: Failed to generate workloads.
-    PAUSE
-    EXIT /B 1
-)
-
 ENDLOCAL
 
 ECHO.

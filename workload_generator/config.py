@@ -167,7 +167,7 @@ class WorkloadConfiguration:
     float: The 50/50 chance a background task will perform a linear scan vs a thrashing loop.
     """
 
-    DEFAULT_BASE_DIRECTORY = "../workloads"
+    DEFAULT_BASE_DIRECTORY = "workloads"
     """str: The root directory for workload generation output."""
 
     TRACES_SUBDIRECTORY = "traces"
