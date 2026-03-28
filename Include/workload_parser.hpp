@@ -1,10 +1,11 @@
 #pragma once
 
 #include <filesystem>
-#include <os_engine.hpp>
-#include <process.hpp>
 #include <string>
 #include <vector>
+
+#include "memory_api.hpp"
+#include "process.hpp"
 
 namespace os_simulation_parser {
 enum class WorkloadType {

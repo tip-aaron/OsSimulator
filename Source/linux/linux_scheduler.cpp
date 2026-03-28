@@ -42,9 +42,9 @@ uint64_t os_simulation_linux_scheduler::LinuxCfsScheduler::calcDelta(
 }
 
 os_simulation_linux_scheduler::LinuxCfsScheduler::CfsNode::CfsNode(
-    const os_simulation_process::Process &p)
-    : process(p) {
-  int niceValue = __convPriorityToNice(process.getPriority());
+    const os_simulation_process::Process &rProcess)
+    : process(rProcess) {
+  int niceValue = __convPriorityToNice(rProcess.getPriority());
   int arrIndex = std::clamp(niceValue + 20, 0, 39);
 
   mWeight = os_simulation_linux_scheduler_math::SCHED_PRIO_TO_WEIGHT[arrIndex];
@@ -98,9 +98,9 @@ os_simulation_linux_scheduler::LinuxCfsScheduler::getNextProcessToRun() {
 }
 
 void os_simulation_linux_scheduler::LinuxCfsScheduler::executeProcess(
-    os_simulation_process::Process *process) {
+    os_simulation_process::Process *pProcess) {
   for (auto &rNode : mNodes) {
-    if (rNode.process.getId() == process->getId()) {
+    if (rNode.process.getId() == pProcess->getId()) {
       rNode.process.setState(os_simulation_process::ProcessState::RUNNING);
 
       if (rNode.process.getStartTime() == -1) {
@@ -123,8 +123,8 @@ void os_simulation_linux_scheduler::LinuxCfsScheduler::executeProcess(
 }
 
 void os_simulation_linux_scheduler::LinuxCfsScheduler::addProcess(
-    const os_simulation_process::Process &p) {
-  mNodes.emplace_back(p);
+    const os_simulation_process::Process &rProcess) {
+  mNodes.emplace_back(rProcess);
 
   // Initialize vruntime. (Processes start in ProcessState::NEW by default)
   mNodes.back().mVruntime = mNodes.back().mInverseWeight;

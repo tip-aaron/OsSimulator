@@ -1,9 +1,8 @@
-#include "workload_parser.hpp"
-
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <workload_parser.hpp>
 
 namespace fs = std::filesystem;
 
