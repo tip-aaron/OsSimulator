@@ -1,6 +1,7 @@
 #pragma once
 
 #include <filesystem>
+#include <os_engine.hpp>
 #include <process.hpp>
 #include <string>
 #include <vector>
@@ -25,6 +26,9 @@ class WorkloadParser {
 
   [[nodiscard]] std::vector<ProcessWorkload> parse(
       const WorkloadType &workloadType) const;
+
+  [[nodiscard]] std::vector<os_simulation_process::TraceAccess> parseTraceFile(
+      const std::filesystem::path &traceFile) const;
 
  private:
   std::filesystem::path mProjectRoot;

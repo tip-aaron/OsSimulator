@@ -108,4 +108,46 @@ std::vector<ProcessWorkload> WorkloadParser::parse(
   return workloads;
 }
 
+std::vector<os_simulation_process::TraceAccess> WorkloadParser::parseTraceFile(
+    const fs::path &traceFile) const {
+  std::vector<os_simulation_process::TraceAccess> traceAccessVec;
+
+  if (!fs::exists(traceFile)) {
+    std::cerr << "Trace file not found: " << traceFile << "\n";
+
+    return traceAccessVec;
+  }
+
+  std::ifstream file(traceFile);
+
+  if (!file.is_open()) {
+    throw std::runtime_error("Failed to open trace file: " +
+                             traceFile.string());
+  }
+
+  std::string typeStr;
+  std::string hexStr;
+
+  while (file >> typeStr >> hexStr) {
+    os_simulation_process::TraceAccess traceAccess;
+
+    if (typeStr == "W" || typeStr == "w") {
+      traceAccess.mAccessType = os_simulation_memory::MemoryAccessType::WRITE;
+    } else {
+      traceAccess.mAccessType = os_simulation_memory::MemoryAccessType::READ;
+    }
+
+    try {
+      traceAccess.mVirtualAddress = std::stoull(hexStr, nullptr, 16);
+    } catch (const std::exception &e) {
+      throw std::runtime_error("Invalid hex address in trace file " +
+                               traceFile.string() + ": " + hexStr);
+    }
+
+    traceAccessVec.push_back(traceAccess);
+  }
+
+  return traceAccessVec;
+}
+
 }  // namespace os_simulation_parser
