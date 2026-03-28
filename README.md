@@ -85,7 +85,7 @@ Please follow the steps carefully to ensure a successful setup.
 
 ## Developing
 
-- If you add new files, make sure to rerun `scripts/premake.bat` or `scripts/premake.sh` to update the project files, then recompile the project using your IDE or command line.
+- If you add new folders, make sure to rerun `scripts/premake.bat` or `scripts/premake.sh` to update the project files, then recompile the project using your IDE or command line.
 - For using `VsCode` with `Make`, you can run the following command in the terminal:
 
 ```bash
