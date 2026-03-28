@@ -23,6 +23,9 @@ std::string to_string(const WorkloadType &workloadType) {
 WorkloadParser::WorkloadParser(const std::string &projectRoot)
     : mProjectRoot(projectRoot) {
   if (!fs::exists(mProjectRoot) || !fs::is_directory(mProjectRoot)) {
+    std::cerr << "Attempted to resolve path: " << fs::absolute(mProjectRoot)
+              << "\n";
+
     throw std::invalid_argument(
         "Project root path does not exist or is not a directory");
   }
@@ -57,7 +60,7 @@ ProcessWorkload WorkloadParser::parseCsvLine(const std::string &line,
     int arrival = std::stoi(arrivalStr);
 
     // Construct the expected trace file path
-    fs::path traceFile = tracesDir / ("process" + idStr + ".ref");
+    fs::path traceFile = tracesDir / ("process_" + idStr + ".ref");
 
     if (!fs::exists(traceFile)) {
       std::cerr << "Warning: Missing trace file for Process ID " << id << " at "
@@ -141,7 +144,8 @@ std::vector<os_simulation_memory::TraceAccess> WorkloadParser::parseTraceFile(
     }
 
     try {
-      traceAccess.mVirtualAddress = std::stoull(hexStr, nullptr, 16);
+      traceAccess.mVirtualAddress =
+          static_cast<uint32_t>(std::stoull(hexStr, nullptr, 0));
     } catch (const std::exception &e) {
       throw std::runtime_error("Invalid hex address in trace file " +
                                traceFile.string() + ": " + hexStr);

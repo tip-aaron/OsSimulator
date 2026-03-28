@@ -87,6 +87,17 @@ os_simulation_linux_scheduler::LinuxCfsScheduler::selectNextNode() {
 }
 
 os_simulation_process::Process *
+os_simulation_linux_scheduler::LinuxCfsScheduler::getProcess(int processId) {
+  for (auto &rNode : mNodes) {
+    if (rNode.process.getId() == processId) {
+      return &rNode.process;
+    }
+  }
+
+  return nullptr;
+}
+
+os_simulation_process::Process *
 os_simulation_linux_scheduler::LinuxCfsScheduler::getNextProcessToRun() {
   CfsNode *nextNode = selectNextNode();
 

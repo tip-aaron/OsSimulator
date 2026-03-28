@@ -78,12 +78,12 @@ class LinuxCfsScheduler : public os_simulation_scheduler::IScheduler {
   void addTick() override;
 
   CfsNode *selectNextNode();
+  os_simulation_process::Process *getProcess(int processId) override;
   os_simulation_process::Process *getNextProcessToRun() override;
   void executeProcess(os_simulation_process::Process *pProcess) override;
 
   [[nodiscard]] bool isFinished() const override;
 
-  // Add this to the public section of LinuxCfsScheduler
   [[nodiscard]] const os_simulation_process::Process &getProcess(int id) const;
 };
 }  // namespace os_simulation_linux_scheduler

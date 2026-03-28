@@ -25,7 +25,7 @@ def main():
     is_read_heavy = (args.mode == 'read')
     mode_label = "Read-Heavy" if is_read_heavy else "Write-Heavy"
 
-    number_of_processes = 1000
+    number_of_processes = 10000
 
     print(f"--- Generating Workloads in {mode_label} Mode ---\n")
 

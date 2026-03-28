@@ -11,11 +11,11 @@ void os_simulation_engine::OsSimulationEngine::runSimulation() {
     auto *pRunningProcess = mScheduler->getNextProcessToRun();
 
     if (pRunningProcess != nullptr) {
+      int pid = pRunningProcess->getId();
       os_simulation_memory::TraceAccess nextTraceAccess =
-          getNextTraceForProcess(pRunningProcess->getId());
+          getNextTraceForProcess(pid);
       bool isHit = mMemoryManager->accessAddress(
-          pRunningProcess->getId(), nextTraceAccess.mVirtualAddress,
-          nextTraceAccess.mAccessType);
+          pid, nextTraceAccess.mVirtualAddress, nextTraceAccess.mAccessType);
 
       if (!isHit) {
         mMemoryManager->handlePageFault(pRunningProcess->getId(),
@@ -23,6 +23,9 @@ void os_simulation_engine::OsSimulationEngine::runSimulation() {
                                         nextTraceAccess.mAccessType);
         pRunningProcess->block(
             os_simulation_architecture::BACKING_STORE_LATENCY_MS);
+
+        // Rewind trace to retry after a block
+        mTraceAccessIndices[pid]--;
       } else {
         mScheduler->executeProcess(pRunningProcess);
       }
@@ -74,5 +77,3 @@ os_simulation_engine::OsSimulationEngine::getNextTraceForProcess(
 
   return currentTraceAccess;
 }
-
-// DO THIS NEXT

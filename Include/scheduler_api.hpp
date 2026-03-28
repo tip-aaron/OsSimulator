@@ -9,6 +9,7 @@ class IScheduler {
   virtual void addProcess(const os_simulation_process::Process &rProcess) = 0;
   virtual void addTick() = 0;
 
+  virtual os_simulation_process::Process *getProcess(int processId) = 0;
   virtual os_simulation_process::Process *getNextProcessToRun() = 0;
   virtual void executeProcess(os_simulation_process::Process *pProcess) = 0;
 
