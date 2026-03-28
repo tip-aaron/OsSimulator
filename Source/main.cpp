@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iomanip>
 #include <iostream>
 #include <limits>
@@ -145,8 +146,17 @@ int main(int argc, char *argv[]) {
 
     // Print Top 5 Processes by Page Faults to give insight into thrashing
     std::cout << "\n--- Top 5 Processes by Page Faults ---\n";
+
+    auto faultMap = metrics.memory.getPerProcessFaultMap();
+
+    std::vector<std::pair<int, int>> sortedFaults(faultMap.begin(),
+                                                  faultMap.end());
+
+    std::sort(sortedFaults.begin(), sortedFaults.end(),
+              [](const auto &a, const auto &b) { return a.second > b.second; });
+
     int count = 0;
-    for (const auto &[pid, faults] : metrics.memory.getPerProcessFaultMap()) {
+    for (const auto &[pid, faults] : sortedFaults) {
       std::cout << "PID " << std::left << std::setw(5) << pid << ": " << faults
                 << " faults\n";
       if (++count >= 5) break;

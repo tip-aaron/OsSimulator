@@ -1,5 +1,7 @@
 #include "os_engine.hpp"
 
+#include <thread>
+
 os_simulation_engine::OsSimulationEngine::OsSimulationEngine(
     std::shared_ptr<os_simulation_scheduler::IScheduler> scheduler,
     std::shared_ptr<os_simulation_memory::IMemoryManager> memoryManager)
@@ -7,6 +9,48 @@ os_simulation_engine::OsSimulationEngine::OsSimulationEngine(
       mMemoryManager(std::move(memoryManager)) {}
 
 void os_simulation_engine::OsSimulationEngine::runSimulation() {
+  std::atomic<bool> isSimulating{true};
+  auto simStartTime = std::chrono::steady_clock::now();
+  size_t totalProcesses = mProcessTraces.size();
+
+  std::thread loaderThread([&]() {
+    const char spinner[] = {'|', '/', '-', '\\'};
+    int spinIdx = 0;
+
+    while (isSimulating) {
+      auto now = std::chrono::steady_clock::now();
+      auto elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+                           now - simStartTime)
+                           .count();
+      double elapsedSec = elapsedMs / 1000.0;
+      size_t completedCount = 0;
+
+      for (const auto &[pid, traces] : mProcessTraces) {
+        const auto &proc = mScheduler->getProcess(pid);
+        if (proc != nullptr && proc->getCompletionTime() > 0) {
+          completedCount++;
+        }
+      }
+
+      float percent =
+          (totalProcesses > 0)
+              ? (static_cast<float>(completedCount) / totalProcesses) * 100.0f
+              : 0.0f;
+
+      std::cout << "\r[" << spinner[spinIdx % 4]
+                << "] Simulating: " << completedCount << " / " << totalProcesses
+                << " finished (" << std::fixed << std::setprecision(1)
+                << percent << "%) - " << std::fixed << std::setprecision(1)
+                << elapsedSec << "s elapsed   " << std::flush;
+
+      spinIdx++;
+
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+
+    std::cout << "\r" << std::string(90, ' ') << "\r" << std::flush;
+  });
+
   while (!mScheduler->isFinished()) {
     auto *pRunningProcess = mScheduler->getNextProcessToRun();
 
@@ -14,6 +58,7 @@ void os_simulation_engine::OsSimulationEngine::runSimulation() {
       int pid = pRunningProcess->getId();
       os_simulation_memory::TraceAccess nextTraceAccess =
           getNextTraceForProcess(pid);
+
       bool isHit = mMemoryManager->accessAddress(
           pid, nextTraceAccess.mVirtualAddress, nextTraceAccess.mAccessType);
 
@@ -24,7 +69,6 @@ void os_simulation_engine::OsSimulationEngine::runSimulation() {
         pRunningProcess->block(
             os_simulation_architecture::BACKING_STORE_LATENCY_MS);
 
-        // Rewind trace to retry after a block
         mTraceAccessIndices[pid]--;
       } else {
         mScheduler->executeProcess(pRunningProcess);
@@ -33,6 +77,18 @@ void os_simulation_engine::OsSimulationEngine::runSimulation() {
 
     mScheduler->addTick();
   }
+
+  isSimulating = false;
+  loaderThread.join();
+
+  auto simEndTime = std::chrono::steady_clock::now();
+  double totalSec = std::chrono::duration_cast<std::chrono::milliseconds>(
+                        simEndTime - simStartTime)
+                        .count() /
+                    1000.0;
+
+  std::cout << "Engine finished crunching in " << std::fixed
+            << std::setprecision(2) << totalSec << " seconds.\n";
 }
 
 void os_simulation_engine::OsSimulationEngine::loadWorkload(
