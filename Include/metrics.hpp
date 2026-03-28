@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <unordered_map>
 
 namespace os_simulation_metrics {
 struct CpuMetrics {
@@ -32,20 +33,17 @@ struct MemoryMetrics {
   std::unordered_map<int, uint32_t> mPageFaultsPerProcess;
 
  public:
-  void recordAccess(int processId, bool isPageFault) {
+  void recordAccess(int processId) {
     mTotalMemoryAccesses++;
 
-    if (isPageFault) {
-      mTotalPageFaults++;
-      mPageFaultsPerProcess[processId]++;
-    } else {
-      // Ensure the process is at least registered in the map even if it
-      // hasn't faulted
-      if (mPageFaultsPerProcess.find(processId) ==
-          mPageFaultsPerProcess.end()) {
-        mPageFaultsPerProcess[processId] = 0;
-      }
+    if (mPageFaultsPerProcess.find(processId) == mPageFaultsPerProcess.end()) {
+      mPageFaultsPerProcess[processId] = 0;
     }
+  }
+
+  void recordPageFault(int processId) {
+    mTotalPageFaults++;
+    mPageFaultsPerProcess[processId]++;
   }
 
   [[nodiscard]] uint32_t getTotalPageFaults() const { return mTotalPageFaults; }

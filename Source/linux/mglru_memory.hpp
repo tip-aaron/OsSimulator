@@ -9,6 +9,22 @@
 
 namespace os_simulation_memory {
 
+struct GlobalPageId {
+  int processId;
+  uint64_t vpn;
+
+  // Needed so we can use this struct as a key in std::unordered_map
+  bool operator==(const GlobalPageId &other) const {
+    return processId == other.processId && vpn == other.vpn;
+  }
+};
+
+struct GlobalPageIdHash {
+  std::size_t operator()(const GlobalPageId &k) const {
+    return std::hash<int>()(k.processId) ^ (std::hash<uint64_t>()(k.vpn) << 1);
+  }
+};
+
 class MglruMemoryManager : public IMemoryManager {
  public:
   static constexpr int NUM_GENERATIONS = 4;
@@ -49,12 +65,12 @@ class MglruMemoryManager : public IMemoryManager {
     int mGeneration;
     bool mReferenced;
     bool mDirty;
-    std::list<uint64_t>::iterator mListIterator;
+    std::list<GlobalPageId>::iterator mListIterator;
   };
 
-  std::unordered_map<uint64_t, PageEntry> mPageTable;
+  std::unordered_map<GlobalPageId, PageEntry, GlobalPageIdHash> mPageTable;
 
-  std::vector<std::list<uint64_t>> mGenerations;
+  std::vector<std::list<GlobalPageId>> mGenerations;
 
   uint32_t mFreeFrames;
 

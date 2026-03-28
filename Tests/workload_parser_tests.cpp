@@ -9,7 +9,8 @@ TEST_F(WorkloadParserTest, ParseThrowsOnMissingCsv) {
   WorkloadParser parser(tempRoot.string());
 
   // We haven't created the CSV yet, so this should throw
-  EXPECT_THROW(parser.parse(WorkloadType::INTERACTIVE), std::runtime_error);
+  EXPECT_THROW((void)parser.parse(WorkloadType::INTERACTIVE),
+               std::runtime_error);
 }
 
 TEST_F(WorkloadParserTest, ParseSuccessfullyReadsValidCsv) {
@@ -30,7 +31,7 @@ TEST_F(WorkloadParserTest, ParseSuccessfullyReadsValidCsv) {
 
   EXPECT_TRUE(stderrOutput.empty())
       << "Expected no warnings, but got: " << stderrOutput;
-  ASSERT_EQ(workloads.size(), 2);
+  ASSERT_EQ(workloads.size(), 2u);
 
   EXPECT_EQ(workloads[0].mProcess.getId(), 1);
   EXPECT_EQ(workloads[0].mProcess.getPriority(), 7);
@@ -39,6 +40,17 @@ TEST_F(WorkloadParserTest, ParseSuccessfullyReadsValidCsv) {
   EXPECT_EQ(workloads[1].mProcess.getId(), 2);
   EXPECT_EQ(workloads[1].mProcess.getPriority(), 9);
   EXPECT_EQ(workloads[1].mTraceFilePath.filename(), "process2.ref");
+}
+
+TEST_F(WorkloadParserTest, ParseTraceFileThrowsOnBadFormat) {
+  WorkloadParser parser(tempRoot.string());
+
+  fs::path badTracePath = tempRoot / "bad_trace.ref";
+  std::ofstream out(badTracePath);
+  out << "Z 1A2B\n";
+  out.close();
+
+  EXPECT_THROW((void)parser.parseTraceFile(badTracePath), std::runtime_error);
 }
 
 TEST_F(WorkloadParserTest, ParseHandlesMalformedLinesGracefully) {
@@ -58,7 +70,7 @@ TEST_F(WorkloadParserTest, ParseHandlesMalformedLinesGracefully) {
   auto workloads = parser.parse(WorkloadType::MIXED_INTERACTIVE_BACKGROUND);
   std::string stderrOutput = testing::internal::GetCapturedStderr();
 
-  ASSERT_EQ(workloads.size(), 2);
+  ASSERT_EQ(workloads.size(), 2u);
   EXPECT_EQ(workloads[0].mProcess.getId(), 1);
   EXPECT_EQ(workloads[1].mProcess.getId(), 3);
 
@@ -78,7 +90,7 @@ TEST_F(WorkloadParserTest, ParseLogsWarningForMissingTraceFile) {
   auto workloads = parser.parse(WorkloadType::INTERACTIVE);
   std::string stderrOutput = testing::internal::GetCapturedStderr();
 
-  ASSERT_EQ(workloads.size(), 1);
+  ASSERT_EQ(workloads.size(), 1u);
 
   EXPECT_TRUE(
       stderrOutput.find("Warning: Missing trace file for Process ID 1") !=

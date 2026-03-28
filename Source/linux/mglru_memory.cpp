@@ -19,10 +19,10 @@ uint64_t os_simulation_memory::MglruMemoryManager::getVpn(
 bool os_simulation_memory::MglruMemoryManager::accessAddress(
     int processId, uint64_t virtualAddress, MemoryAccessType accessType) {
   uint64_t vpn = getVpn(virtualAddress);
-  auto it = mPageTable.find(vpn);
+  auto it = mPageTable.find(GlobalPageId{processId, vpn});
 
   if (it != mPageTable.end()) {
-    mMemoryMetrics.recordAccess(processId, false);
+    mMemoryMetrics.recordAccess(processId);
 
     it->second.mReferenced = true;
 
@@ -33,7 +33,7 @@ bool os_simulation_memory::MglruMemoryManager::accessAddress(
     return true;
   }
 
-  mMemoryMetrics.recordAccess(processId, true);
+  mMemoryMetrics.recordAccess(processId);
 
   return false;
 }
@@ -41,6 +41,7 @@ bool os_simulation_memory::MglruMemoryManager::accessAddress(
 void os_simulation_memory::MglruMemoryManager::handlePageFault(
     int processId, uint64_t virtualAddress, MemoryAccessType accessType) {
   uint64_t vpn = getVpn(virtualAddress);
+  GlobalPageId globalId{processId, vpn};
 
   if (mFreeFrames == 0) {
     evictPage();
@@ -48,25 +49,27 @@ void os_simulation_memory::MglruMemoryManager::handlePageFault(
     mFreeFrames--;
   }
 
-  mGenerations[0].push_front(vpn);
+  mGenerations[0].push_front(globalId);
 
   mPageTable.emplace(
-      vpn,
+      globalId,
       PageEntry{/* .mGeneration   = */ 0,
                 /* .mReferenced   = */ false,
                 /* .mDirty        = */ accessType == MemoryAccessType::WRITE,
                 /* .mListIterator = */ mGenerations[0].begin()});
+
+  mMemoryMetrics.recordPageFault(processId);
 }
 
 void os_simulation_memory::MglruMemoryManager::ageGenerations() {
-  std::vector<std::list<uint64_t>> nextGenerations(NUM_GENERATIONS);
+  std::vector<std::list<GlobalPageId>> nextGenerations(NUM_GENERATIONS);
 
   for (int g = 0; g < NUM_GENERATIONS; ++g) {
     auto it = mGenerations[g].begin();
 
     while (it != mGenerations[g].end()) {
-      const uint64_t vpn = *it;
-      auto &entry = mPageTable.at(vpn);
+      const GlobalPageId globalId = *it;
+      auto &entry = mPageTable.at(globalId);
       auto next_it = std::next(it);
 
       if (entry.mReferenced) {
@@ -96,9 +99,9 @@ void os_simulation_memory::MglruMemoryManager::evictPage() {
       continue;
     }
 
-    const uint64_t vpnToEvict = mGenerations[g].back();
+    const GlobalPageId idToEvict = mGenerations[g].back();
 
-    mPageTable.erase(vpnToEvict);
+    mPageTable.erase(idToEvict);
     mGenerations[g].pop_back();
 
     mFreeFrames++;

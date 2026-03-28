@@ -132,8 +132,12 @@ std::vector<os_simulation_memory::TraceAccess> WorkloadParser::parseTraceFile(
 
     if (typeStr == "W" || typeStr == "w") {
       traceAccess.mAccessType = os_simulation_memory::MemoryAccessType::WRITE;
-    } else {
+    } else if (typeStr == "R" || typeStr == "r") {
       traceAccess.mAccessType = os_simulation_memory::MemoryAccessType::READ;
+    } else {
+      throw std::runtime_error("Invalid access type in trace file " +
+                               traceFile.string() +
+                               ": expected R or W but got '" + typeStr + "'");
     }
 
     try {

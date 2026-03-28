@@ -13,6 +13,16 @@ using namespace os_simulation_linux_scheduler;
 using namespace os_simulation_metrics;
 using namespace os_simulation_process;
 
+inline auto tickEngine = [](auto &sched) {
+  auto *p = sched->getNextProcessToRun();
+
+  if (p != nullptr) {
+    sched->executeProcess(p);
+  }
+
+  sched->addTick();
+};
+
 class CfsSchedulerTest : public ::testing::Test {
  protected:
   CpuMetrics cpuMetrics;
