@@ -2,8 +2,8 @@
 
 TEST_F(CfsSchedulerTest, SingleProcessExecution) {
   Process process(1, 5, 3, 0);
-  scheduler->addProcess(process);
 
+  scheduler->addProcess(process);
   EXPECT_FALSE(scheduler->isFinished());
 
   tickEngine(scheduler);

@@ -9,11 +9,13 @@ TEST_F(CfsSchedulerTest, SamePrioritySharesCpuFairly) {
 
   tickEngine(scheduler);
   tickEngine(scheduler);
+
   EXPECT_EQ(scheduler->getProcess(1).getRemainingTime(), 1);
   EXPECT_EQ(scheduler->getProcess(2).getRemainingTime(), 1);
 
   tickEngine(scheduler);
   tickEngine(scheduler);
+
   EXPECT_TRUE(scheduler->isFinished());
   EXPECT_EQ(scheduler->getProcess(1).getRemainingTime(), 0);
   EXPECT_EQ(scheduler->getProcess(2).getRemainingTime(), 0);
