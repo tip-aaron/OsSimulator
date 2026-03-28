@@ -12,7 +12,7 @@ enum class WorkloadType {
   MIXED_INTERACTIVE_BACKGROUND
 };
 
-std::string to_string(const WorkloadType& workloadType);
+std::string to_string(const WorkloadType &workloadType);
 
 struct ProcessWorkload {
   os_simulation_process::Process mProcess;
@@ -21,20 +21,20 @@ struct ProcessWorkload {
 
 class WorkloadParser {
  public:
-  explicit WorkloadParser(const std::string& projectRoot);
+  explicit WorkloadParser(const std::string &projectRoot);
 
   [[nodiscard]] std::vector<ProcessWorkload> parse(
-      const WorkloadType& workloadType) const;
+      const WorkloadType &workloadType) const;
 
  private:
   std::filesystem::path mProjectRoot;
 
-  void getTargetDirectories(const WorkloadType& workloadType,
-                            std::filesystem::path& outCsvPath,
-                            std::filesystem::path& outTracesDir) const;
+  void getTargetDirectories(const WorkloadType &workloadType,
+                            std::filesystem::path &outCsvPath,
+                            std::filesystem::path &outTracesDir) const;
 
   [[nodiscard]] ProcessWorkload parseCsvLine(
-      const std::string& line, const std::filesystem::path& tracesDir) const;
+      const std::string &line, const std::filesystem::path &tracesDir) const;
 };
 
 }  // namespace os_simulation_parser

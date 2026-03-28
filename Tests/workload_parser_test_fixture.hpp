@@ -24,7 +24,7 @@ class WorkloadParserTest : public ::testing::Test {
     }
   }
 
-  void createMockCsv(const WorkloadType& type, const std::string& content) {
+  void createMockCsv(const WorkloadType &type, const std::string &content) {
     fs::path dir = tempRoot / "workloads" / to_string(type);
 
     fs::create_directories(dir / "traces");
@@ -35,7 +35,7 @@ class WorkloadParserTest : public ::testing::Test {
     file.close();
   }
 
-  void createMockTraceFile(const WorkloadType& type, int processId) {
+  void createMockTraceFile(const WorkloadType &type, int processId) {
     fs::path tracePath = tempRoot / "workloads" / to_string(type) / "traces" /
                          ("process" + std::to_string(processId) + ".ref");
     std::ofstream file(tracePath);

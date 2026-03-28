@@ -5,7 +5,7 @@
 #include <iterator>
 
 os_simulation_memory::MglruMemoryManager::MglruMemoryManager(
-    os_simulation_metrics::MemoryMetrics& memoryMetrics)
+    os_simulation_metrics::MemoryMetrics &memoryMetrics)
     : mFreeFrames(os_simulation_architecture::PHYSICAL_FRAME_COUNT),
       mMemoryMetrics(memoryMetrics) {
   mGenerations.resize(NUM_GENERATIONS);
@@ -66,7 +66,7 @@ void os_simulation_memory::MglruMemoryManager::ageGenerations() {
 
     while (it != mGenerations[g].end()) {
       const uint64_t vpn = *it;
-      auto& entry = mPageTable.at(vpn);
+      auto &entry = mPageTable.at(vpn);
       auto next_it = std::next(it);
 
       if (entry.mReferenced) {

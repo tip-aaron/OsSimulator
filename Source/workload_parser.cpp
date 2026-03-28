@@ -8,7 +8,7 @@
 namespace fs = std::filesystem;
 
 namespace os_simulation_parser {
-std::string to_string(const WorkloadType& workloadType) {
+std::string to_string(const WorkloadType &workloadType) {
   switch (workloadType) {
     case WorkloadType::INTERACTIVE:
       return "interactive";
@@ -21,7 +21,7 @@ std::string to_string(const WorkloadType& workloadType) {
   };
 }
 
-WorkloadParser::WorkloadParser(const std::string& projectRoot)
+WorkloadParser::WorkloadParser(const std::string &projectRoot)
     : mProjectRoot(projectRoot) {
   if (!fs::exists(mProjectRoot) || !fs::is_directory(mProjectRoot)) {
     throw std::invalid_argument(
@@ -29,9 +29,9 @@ WorkloadParser::WorkloadParser(const std::string& projectRoot)
   }
 }
 
-void WorkloadParser::getTargetDirectories(const WorkloadType& workloadType,
-                                          fs::path& outCsvPath,
-                                          fs::path& outTracesDir) const {
+void WorkloadParser::getTargetDirectories(const WorkloadType &workloadType,
+                                          fs::path &outCsvPath,
+                                          fs::path &outTracesDir) const {
   fs::path workloadDir = mProjectRoot / "workloads" / to_string(workloadType);
   outCsvPath = workloadDir / "processes.csv";
   outTracesDir = workloadDir / "traces";
@@ -41,8 +41,8 @@ void WorkloadParser::getTargetDirectories(const WorkloadType& workloadType,
   }
 }
 
-ProcessWorkload WorkloadParser::parseCsvLine(const std::string& line,
-                                             const fs::path& tracesDir) const {
+ProcessWorkload WorkloadParser::parseCsvLine(const std::string &line,
+                                             const fs::path &tracesDir) const {
   std::stringstream ss(line);
   std::string idStr, priorityStr, burstStr, arrivalStr;
 
@@ -68,14 +68,14 @@ ProcessWorkload WorkloadParser::parseCsvLine(const std::string& line,
     os_simulation_process::Process process(id, priority, burst, arrival);
 
     return ProcessWorkload{process, traceFile};
-  } catch (const std::exception& e) {
+  } catch (const std::exception &e) {
     throw std::runtime_error("Error parsing CSV line: " + line + " - " +
                              e.what());
   }
 }
 
 std::vector<ProcessWorkload> WorkloadParser::parse(
-    const WorkloadType& workloadType) const {
+    const WorkloadType &workloadType) const {
   fs::path csvFile, tracesDir;
 
   getTargetDirectories(workloadType, csvFile, tracesDir);
@@ -100,7 +100,7 @@ std::vector<ProcessWorkload> WorkloadParser::parse(
       ProcessWorkload workload = parseCsvLine(line, tracesDir);
 
       workloads.push_back(workload);
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
       std::cerr << e.what() << "\n";
     }
   }

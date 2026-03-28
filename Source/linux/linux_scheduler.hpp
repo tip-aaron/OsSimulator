@@ -62,7 +62,7 @@ class LinuxCfsScheduler : public os_simulation_scheduler::IScheduler {
     uint32_t mInverseWeight{0};
 
     // explicit to avoid implicit conversions of Process.
-    explicit CfsNode(const os_simulation_process::Process& p);
+    explicit CfsNode(const os_simulation_process::Process &p);
   };
 
   std::vector<CfsNode> mNodes;
@@ -74,16 +74,16 @@ class LinuxCfsScheduler : public os_simulation_scheduler::IScheduler {
                             uint64_t inverseWeight);
 
  public:
-  void addProcess(const os_simulation_process::Process& p) override;
+  void addProcess(const os_simulation_process::Process &p) override;
   void addTick() override;
 
-  CfsNode* selectNextNode();
-  os_simulation_process::Process* getNextProcessToRun() override;
-  void executeProcess(os_simulation_process::Process* process) override;
+  CfsNode *selectNextNode();
+  os_simulation_process::Process *getNextProcessToRun() override;
+  void executeProcess(os_simulation_process::Process *process) override;
 
   [[nodiscard]] bool isFinished() const override;
 
   // Add this to the public section of LinuxCfsScheduler
-  [[nodiscard]] const os_simulation_process::Process& getProcess(int id) const;
+  [[nodiscard]] const os_simulation_process::Process &getProcess(int id) const;
 };
 }  // namespace os_simulation_linux_scheduler

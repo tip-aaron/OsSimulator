@@ -42,7 +42,7 @@ uint64_t os_simulation_linux_scheduler::LinuxCfsScheduler::calcDelta(
 }
 
 os_simulation_linux_scheduler::LinuxCfsScheduler::CfsNode::CfsNode(
-    const os_simulation_process::Process& p)
+    const os_simulation_process::Process &p)
     : process(p) {
   int niceValue = __convPriorityToNice(process.getPriority());
   int arrIndex = std::clamp(niceValue + 20, 0, 39);
@@ -53,8 +53,8 @@ os_simulation_linux_scheduler::LinuxCfsScheduler::CfsNode::CfsNode(
 }
 
 void os_simulation_linux_scheduler::LinuxCfsScheduler::updateProcessStates() {
-  for (auto& rNode : mNodes) {
-    auto& rProcess = rNode.process;
+  for (auto &rNode : mNodes) {
+    auto &rProcess = rNode.process;
 
     if ((rProcess.getState() == os_simulation_process::ProcessState::NEW &&
          rProcess.getArrivalTime() <= mCurrentTime) ||
@@ -67,12 +67,12 @@ void os_simulation_linux_scheduler::LinuxCfsScheduler::updateProcessStates() {
   }
 }
 
-os_simulation_linux_scheduler::LinuxCfsScheduler::CfsNode*
+os_simulation_linux_scheduler::LinuxCfsScheduler::CfsNode *
 os_simulation_linux_scheduler::LinuxCfsScheduler::selectNextNode() {
-  CfsNode* pNextNode = nullptr;
+  CfsNode *pNextNode = nullptr;
   uint64_t minVruntime = std::numeric_limits<uint64_t>::max();
 
-  for (auto& rNode : mNodes) {
+  for (auto &rNode : mNodes) {
     if (rNode.process.getState() !=
             os_simulation_process::ProcessState::READY ||
         rNode.mVruntime >= minVruntime) {
@@ -86,9 +86,9 @@ os_simulation_linux_scheduler::LinuxCfsScheduler::selectNextNode() {
   return pNextNode;
 }
 
-os_simulation_process::Process*
+os_simulation_process::Process *
 os_simulation_linux_scheduler::LinuxCfsScheduler::getNextProcessToRun() {
-  CfsNode* nextNode = selectNextNode();
+  CfsNode *nextNode = selectNextNode();
 
   if (nextNode != nullptr) {
     return &(nextNode->process);
@@ -98,8 +98,8 @@ os_simulation_linux_scheduler::LinuxCfsScheduler::getNextProcessToRun() {
 }
 
 void os_simulation_linux_scheduler::LinuxCfsScheduler::executeProcess(
-    os_simulation_process::Process* process) {
-  for (auto& rNode : mNodes) {
+    os_simulation_process::Process *process) {
+  for (auto &rNode : mNodes) {
     if (rNode.process.getId() == process->getId()) {
       rNode.process.setState(os_simulation_process::ProcessState::RUNNING);
 
@@ -123,7 +123,7 @@ void os_simulation_linux_scheduler::LinuxCfsScheduler::executeProcess(
 }
 
 void os_simulation_linux_scheduler::LinuxCfsScheduler::addProcess(
-    const os_simulation_process::Process& p) {
+    const os_simulation_process::Process &p) {
   mNodes.emplace_back(p);
 
   // Initialize vruntime. (Processes start in ProcessState::NEW by default)
@@ -136,7 +136,7 @@ void os_simulation_linux_scheduler::LinuxCfsScheduler::addTick() {
 }
 
 bool os_simulation_linux_scheduler::LinuxCfsScheduler::isFinished() const {
-  for (const auto& node : mNodes) {
+  for (const auto &node : mNodes) {
     if (!node.process.isFinished()) {
       return false;
     }
@@ -145,9 +145,9 @@ bool os_simulation_linux_scheduler::LinuxCfsScheduler::isFinished() const {
   return true;
 }
 
-const os_simulation_process::Process&
+const os_simulation_process::Process &
 os_simulation_linux_scheduler::LinuxCfsScheduler::getProcess(int id) const {
-  for (const auto& node : mNodes) {
+  for (const auto &node : mNodes) {
     if (node.process.getId() == id) {
       return node.process;
     }

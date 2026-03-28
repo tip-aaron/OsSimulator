@@ -8,7 +8,7 @@ os_simulation_engine::OsSimulationEngine::OsSimulationEngine(
 
 void os_simulation_engine::OsSimulationEngine::runSimulation() {
   while (!mScheduler->isFinished()) {
-    auto* pRunningProcess = mScheduler->getNextProcessToRun();
+    auto *pRunningProcess = mScheduler->getNextProcessToRun();
   }
 }
 

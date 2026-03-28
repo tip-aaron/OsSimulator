@@ -68,7 +68,7 @@ struct MemoryMetrics {
     return 0;
   }
 
-  [[nodiscard]] const std::unordered_map<int, uint32_t>& getPerProcessFaultMap()
+  [[nodiscard]] const std::unordered_map<int, uint32_t> &getPerProcessFaultMap()
       const {
     return mPageFaultsPerProcess;
   }

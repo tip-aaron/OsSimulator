@@ -9,7 +9,7 @@
 - `function arguments` must use camelCase
 - `variable` names must use camelCase with optional camelCase_withUnderscore
 - `pointers` must begin with `p` and the '*' be placed exactly before the variable name.
-- `references` must begin with `r` and the '&' be placed exactly after the type name.
+- `references` must begin with `r` and the '&' be place exactly before the variable name.
 - `constants` must be in ALL_CAPS
 - `file_names` must be in snake_case._
 
