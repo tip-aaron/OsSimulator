@@ -28,7 +28,7 @@ class WorkloadParser {
   [[nodiscard]] std::vector<ProcessWorkload> parse(
       const WorkloadType &workloadType) const;
 
-  [[nodiscard]] std::vector<os_simulation_process::TraceAccess> parseTraceFile(
+  [[nodiscard]] std::vector<os_simulation_memory::TraceAccess> parseTraceFile(
       const std::filesystem::path &traceFile) const;
 
  private:

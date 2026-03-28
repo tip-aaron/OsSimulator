@@ -7,6 +7,11 @@ enum class MemoryAccessType {
   WRITE,
 };
 
+struct TraceAccess {
+  uint64_t mVirtualAddress;
+  MemoryAccessType mAccessType;
+};
+
 class IMemoryManager {
  public:
   virtual ~IMemoryManager() = default;

@@ -11,7 +11,7 @@ void os_simulation_engine::OsSimulationEngine::runSimulation() {
     auto *pRunningProcess = mScheduler->getNextProcessToRun();
 
     if (pRunningProcess != nullptr) {
-      os_simulation_process::TraceAccess nextTraceAccess =
+      os_simulation_memory::TraceAccess nextTraceAccess =
           getNextTraceForProcess(pRunningProcess->getId());
       bool isHit = mMemoryManager->accessAddress(
           pRunningProcess->getId(), nextTraceAccess.mVirtualAddress,
@@ -38,7 +38,7 @@ void os_simulation_engine::OsSimulationEngine::loadWorkload(
   for (const auto &rWorkload : rWorkloads) {
     mScheduler->addProcess(rWorkload.mProcess);
 
-    std::vector<os_simulation_process::TraceAccess> traceAccessVec =
+    std::vector<os_simulation_memory::TraceAccess> traceAccessVec =
         rParser.parseTraceFile(rWorkload.mTraceFilePath);
     int pid = rWorkload.mProcess.getId();
     mProcessTraces[pid] = std::move(traceAccessVec);
@@ -47,7 +47,7 @@ void os_simulation_engine::OsSimulationEngine::loadWorkload(
   }
 }
 
-os_simulation_process::TraceAccess
+os_simulation_memory::TraceAccess
 os_simulation_engine::OsSimulationEngine::getNextTraceForProcess(
     int processId) {
   auto traceIt = mProcessTraces.find(processId);
@@ -67,7 +67,7 @@ os_simulation_engine::OsSimulationEngine::getNextTraceForProcess(
     return {0x0, os_simulation_memory::MemoryAccessType::READ};
   }
 
-  os_simulation_process::TraceAccess currentTraceAccess =
+  os_simulation_memory::TraceAccess currentTraceAccess =
       traces[currentLineIndex];
 
   mTraceAccessIndices[processId]++;

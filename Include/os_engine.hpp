@@ -30,12 +30,12 @@ class OsSimulationEngine {
   std::shared_ptr<os_simulation_scheduler::IScheduler> mScheduler;
   std::shared_ptr<os_simulation_memory::IMemoryManager> mMemoryManager;
 
-  std::unordered_map<int, std::vector<os_simulation_process::TraceAccess>>
+  std::unordered_map<int, std::vector<os_simulation_memory::TraceAccess>>
       mProcessTraces;
   // Maps a Process ID to its current "instruction pointer" (which trace line
   // it's on)
   std::unordered_map<int, size_t> mTraceAccessIndices;
 
-  os_simulation_process::TraceAccess getNextTraceForProcess(int processId);
+  os_simulation_memory::TraceAccess getNextTraceForProcess(int processId);
 };
 }  // namespace os_simulation_engine

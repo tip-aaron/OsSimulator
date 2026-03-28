@@ -107,9 +107,9 @@ std::vector<ProcessWorkload> WorkloadParser::parse(
   return workloads;
 }
 
-std::vector<os_simulation_process::TraceAccess> WorkloadParser::parseTraceFile(
+std::vector<os_simulation_memory::TraceAccess> WorkloadParser::parseTraceFile(
     const fs::path &traceFile) const {
-  std::vector<os_simulation_process::TraceAccess> traceAccessVec;
+  std::vector<os_simulation_memory::TraceAccess> traceAccessVec;
 
   if (!fs::exists(traceFile)) {
     std::cerr << "Trace file not found: " << traceFile << "\n";
@@ -128,7 +128,7 @@ std::vector<os_simulation_process::TraceAccess> WorkloadParser::parseTraceFile(
   std::string hexStr;
 
   while (file >> typeStr >> hexStr) {
-    os_simulation_process::TraceAccess traceAccess;
+    os_simulation_memory::TraceAccess traceAccess;
 
     if (typeStr == "W" || typeStr == "w") {
       traceAccess.mAccessType = os_simulation_memory::MemoryAccessType::WRITE;
