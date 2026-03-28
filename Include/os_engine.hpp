@@ -5,14 +5,10 @@
 
 #include "architecture_config.hpp"
 #include "memory_api.hpp"
+#include "process.hpp"
 #include "scheduler_api.hpp"
 
 namespace os_simulation_engine {
-struct TraceAccess {
-  uint64_t mVirtualAddress;
-  os_simulation_memory::MemoryAccessType accessType;
-};
-
 class OsSimulationEngine {
  public:
   OsSimulationEngine(
@@ -21,7 +17,7 @@ class OsSimulationEngine {
 
   void runSimulation();
 
-  TraceAccess getNextTraceForProcess(int processId);
+  os_simulation_process::TraceAccess getNextTraceForProcess(int processId);
 
  private:
   std::shared_ptr<os_simulation_scheduler::IScheduler> mScheduler;

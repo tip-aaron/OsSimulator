@@ -1,6 +1,11 @@
 #pragma once
 
 namespace os_simulation_process {
+struct TraceAccess {
+  uint64_t mVirtualAddress;
+  os_simulation_memory::MemoryAccessType mAccessType;
+};
+
 enum class ProcessState { NEW, READY, RUNNING, BLOCKED, TERMINATED };
 
 struct Process {
