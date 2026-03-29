@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
   std::shared_ptr<os_simulation_scheduler::IScheduler> scheduler =
       os_simulation_factory::createScheduler();
   std::shared_ptr<os_simulation_memory::IMemoryManager> memoryManager =
-      os_simulation_factory::createMemoryManager(metrics.memory);
+      os_simulation_factory::createMemoryManager();
 
   os_simulation_engine::OsSimulationEngine engine(scheduler, memoryManager);
 

@@ -10,7 +10,6 @@ os_simulation_factory::createScheduler() {
 }
 
 std::unique_ptr<os_simulation_memory::IMemoryManager>
-os_simulation_factory::createMemoryManager(
-    os_simulation_metrics::MemoryMetrics &metrics) {
-  return std::make_unique<os_simulation_memory::MglruMemoryManager>(metrics);
+os_simulation_factory::createMemoryManager() {
+  return std::make_unique<os_simulation_memory::MglruMemoryManager>();
 }

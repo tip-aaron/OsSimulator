@@ -4,10 +4,8 @@
 #include <architecture_config.hpp>
 #include <iterator>
 
-os_simulation_memory::MglruMemoryManager::MglruMemoryManager(
-    os_simulation_metrics::MemoryMetrics &memoryMetrics)
-    : mFreeFrames(os_simulation_architecture::PHYSICAL_FRAME_COUNT),
-      mMemoryMetrics(memoryMetrics) {
+os_simulation_memory::MglruMemoryManager::MglruMemoryManager()
+    : mFreeFrames(os_simulation_architecture::PHYSICAL_FRAME_COUNT) {
   mGenerations.resize(NUM_GENERATIONS);
 }
 
@@ -22,8 +20,6 @@ bool os_simulation_memory::MglruMemoryManager::accessAddress(
   auto it = mPageTable.find(GlobalPageId{processId, vpn});
 
   if (it != mPageTable.end()) {
-    mMemoryMetrics.recordAccess(processId);
-
     it->second.mReferenced = true;
 
     if (accessType == MemoryAccessType::WRITE) {
@@ -32,9 +28,6 @@ bool os_simulation_memory::MglruMemoryManager::accessAddress(
 
     return true;
   }
-
-  mMemoryMetrics.recordAccess(processId);
-
   return false;
 }
 
@@ -57,8 +50,6 @@ void os_simulation_memory::MglruMemoryManager::handlePageFault(
                 /* .mReferenced   = */ false,
                 /* .mDirty        = */ accessType == MemoryAccessType::WRITE,
                 /* .mListIterator = */ mGenerations[0].begin()});
-
-  mMemoryMetrics.recordPageFault(processId);
 }
 
 void os_simulation_memory::MglruMemoryManager::ageGenerations() {

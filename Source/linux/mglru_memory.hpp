@@ -29,14 +29,7 @@ class MglruMemoryManager : public IMemoryManager {
  public:
   static constexpr int NUM_GENERATIONS = 4;
 
-  /**
-   * Explicit to prevent implicit conversions,
-   * ensuring the caller must explicitly provide a MemoryMetrics
-   * object when creating an instance of MglruMemoryManager,
-   * making the code clearer and preventing unintended conversions.
-   */
-  explicit MglruMemoryManager(
-      os_simulation_metrics::MemoryMetrics &memoryMetrics);
+  MglruMemoryManager();
   ~MglruMemoryManager() override = default;
 
   /**
@@ -73,8 +66,6 @@ class MglruMemoryManager : public IMemoryManager {
   std::vector<std::list<GlobalPageId>> mGenerations;
 
   uint32_t mFreeFrames;
-
-  os_simulation_metrics::MemoryMetrics &mMemoryMetrics;
 
   [[nodiscard]] uint64_t getVpn(uint64_t virtualAddress) const;
 

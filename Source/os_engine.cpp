@@ -36,7 +36,6 @@ void os_simulation_engine::OsSimulationEngine::runSimulation() {
       int pid = pRunningProcess->getId();
       os_simulation_memory::TraceAccess nextTraceAccess =
           getNextTraceForProcess(pid);
-
       bool isHit = mMemoryManager->accessAddress(
           pid, nextTraceAccess.mVirtualAddress, nextTraceAccess.mAccessType);
 
