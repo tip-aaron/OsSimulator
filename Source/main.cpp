@@ -69,12 +69,7 @@ int main(int argc, char *argv[]) {
     uint64_t totalBurst = 0;
 
     for (const auto &wl : workloads) {
-      // Assuming ProcessWorkload struct has a member named `mProcess` or
-      // `process` Adjust if your struct member is named differently (e.g.,
-      // wl.process.getId())
       int pid = wl.mProcess.getId();
-
-      // Retrieve the final process state from the scheduler
       const auto &finishedProc = scheduler->getProcess(pid);
 
       uint64_t arrival = finishedProc->getArrivalTime();

@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <unordered_map>
+#include <vector>
 
 namespace os_simulation_metrics {
 struct CpuMetrics {
