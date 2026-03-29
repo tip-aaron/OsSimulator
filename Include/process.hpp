@@ -6,29 +6,31 @@ enum class ProcessState { NEW, READY, RUNNING, BLOCKED, TERMINATED };
 
 struct Process {
  private:
-  int mId;
-  int mPriority;
+  uint16_t mId;
+
+  uint8_t mPriority;
+
   /**
    * Total cpu time required
    */
-  int mBurstTime;
+  uint16_t mBurstTime;
   /**
    * When it entered the system
    */
-  int mArrivalTime;
-
-  int mRemainingTime;
-  /**
-   * -1 means it hasn't started yet
+  uint64_t mArrivalTime;
+  uint64_t mRemainingTime;
+  /*
+   * A pair, indicating if it started or not
    */
-  int mStartTime{-1};
-  int mCompletionTime{0};
+  std::pair<uint64_t, bool> mStartTime{0, false};
+  uint64_t mCompletionTime{0};
 
   ProcessState mState{ProcessState::NEW};
-  int mIoWaitTime{0};
+  uint64_t mIoWaitTime{0};
 
  public:
-  Process(int processId, int procPriority, int totalBurst, int arrival)
+  Process(uint16_t processId, uint8_t procPriority, uint16_t totalBurst,
+          uint64_t arrival)
       : mId(processId),
         mPriority(procPriority),
         mBurstTime(totalBurst),
@@ -36,8 +38,9 @@ struct Process {
         mRemainingTime(totalBurst) {}
 
   void setStartTime(int time) {
-    if (mStartTime == -1) {
-      mStartTime = time;
+    if (mStartTime.second == false) {
+      mStartTime.first = time;
+      mStartTime.second = true;
     }
   }
 
@@ -66,13 +69,32 @@ struct Process {
     }
   }
 
-  [[nodiscard]] int getId() const { return mId; }
-  [[nodiscard]] int getPriority() const { return mPriority; }
-  [[nodiscard]] int getBurstTime() const { return mBurstTime; }
-  [[nodiscard]] int getArrivalTime() const { return mArrivalTime; }
-  [[nodiscard]] int getRemainingTime() const { return mRemainingTime; }
-  [[nodiscard]] int getStartTime() const { return mStartTime; }
-  [[nodiscard]] int getCompletionTime() const { return mCompletionTime; }
+  [[nodiscard]] uint64_t getWaitTime() {
+    return getTurnaroundTime() - mBurstTime;
+  }
+
+  [[nodiscard]] uint64_t getTurnaroundTime() {
+    return mCompletionTime - mArrivalTime;
+  }
+
+  [[nodiscard]] uint64_t getResponseTime() {
+    return mStartTime.first - mArrivalTime;
+  }
+
+  [[nodiscard]] uint16_t getId() const { return mId; }
+
+  [[nodiscard]] uint8_t getPriority() const { return mPriority; }
+
+  [[nodiscard]] uint16_t getBurstTime() const { return mBurstTime; }
+
+  [[nodiscard]] uint64_t getArrivalTime() const { return mArrivalTime; }
+
+  [[nodiscard]] uint64_t getRemainingTime() const { return mRemainingTime; }
+
+  [[nodiscard]] uint64_t getStartTime() const { return mStartTime.first; }
+
+  [[nodiscard]] uint64_t getCompletionTime() const { return mCompletionTime; }
+
   [[nodiscard]] ProcessState getState() const { return mState; }
 
   [[nodiscard]] bool isFinished() const {

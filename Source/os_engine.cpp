@@ -72,13 +72,10 @@ void os_simulation_engine::OsSimulationEngine::runSimulation() {
         mScheduler->executeProcess(pRunningProcess);
 
         if (pRunningProcess->isFinished()) {
-          uint64_t turnaround = pRunningProcess->getCompletionTime() -
-                                pRunningProcess->getArrivalTime();
-          uint64_t response = pRunningProcess->getStartTime() -
-                              pRunningProcess->getArrivalTime();
-          uint64_t wait = turnaround - pRunningProcess->getBurstTime();
-
-          mMetrics.cpu.recordProcessCompletion(turnaround, response, wait);
+          mMetrics.cpu.recordProcessCompletion(
+              pRunningProcess->getTurnaroundTime(),
+              pRunningProcess->getResponseTime(),
+              pRunningProcess->getWaitTime());
         }
       }
     } else {
@@ -92,6 +89,7 @@ void os_simulation_engine::OsSimulationEngine::runSimulation() {
   }
 
   progressReporter.stop();
+
   auto simEndTime = std::chrono::steady_clock::now();
   float totalSec = std::chrono::duration_cast<std::chrono::milliseconds>(
                        simEndTime - simStartTime)
