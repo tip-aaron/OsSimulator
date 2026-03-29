@@ -28,8 +28,6 @@ int main(int argc, char *argv[]) {
 
   std::cout << "Starting simulation with project root: " << projectRoot << "\n";
 
-  os_simulation_metrics::OsSimulationMetrics metrics;
-
   std::shared_ptr<os_simulation_scheduler::IScheduler> scheduler =
       os_simulation_factory::createScheduler();
   std::shared_ptr<os_simulation_memory::IMemoryManager> memoryManager =
@@ -54,67 +52,24 @@ int main(int argc, char *argv[]) {
       return 1;
     }
 
-    std::cout << "Successfully loaded " << workloads.size() << " processes.\n";
+    std::cout << "Successfully loaded " << workloads.size()
+              << " processes...\n";
+    std::cout << "Preparing all processes for simulation...\n";
     engine.loadWorkload(workloads, parser);
+    std::cout << "All processes have been prepared!...\n";
 
     std::cout << "Executing OS Simulation...\n";
     engine.runSimulation();
     std::cout << "Simulation completed successfully!\n";
 
-    double totalTurnaround = 0.0;
-    double totalWait = 0.0;
-    double totalResponse = 0.0;
-    uint64_t maxCompletionTime = 0;
-    uint64_t minArrivalTime = std::numeric_limits<uint64_t>::max();
-    uint64_t totalBurst = 0;
-
-    for (const auto &wl : workloads) {
-      int pid = wl.mProcess.getId();
-      const auto &finishedProc = scheduler->getProcess(pid);
-
-      uint64_t arrival = finishedProc->getArrivalTime();
-      uint64_t completion = finishedProc->getCompletionTime();
-      uint64_t burst = finishedProc->getBurstTime();
-      uint64_t start = finishedProc->getStartTime();
-
-      uint64_t turnaround = completion - arrival;
-      uint64_t wait = turnaround - burst;
-      uint64_t response = start - arrival;
-
-      totalTurnaround += turnaround;
-      totalWait += wait;
-      totalResponse += response;
-      totalBurst += burst;
-
-      maxCompletionTime = std::max(maxCompletionTime, completion);
-      minArrivalTime = std::min(minArrivalTime, arrival);
-    }
-
-    uint64_t totalSimulationTime = maxCompletionTime - minArrivalTime;
-    size_t numProcesses = workloads.size();
-
-    if (numProcesses > 0) {
-      metrics.cpu.setAvgWaitingTime(totalWait /
-                                    static_cast<double>(numProcesses));
-      metrics.cpu.setTurnaroundTime(totalTurnaround /
-                                    static_cast<double>(numProcesses));
-      metrics.cpu.setResponseTime(totalResponse /
-                                  static_cast<double>(numProcesses));
-    }
-
-    if (totalSimulationTime > 0) {
-      metrics.cpu.setThroughput(static_cast<double>(numProcesses) /
-                                totalSimulationTime);
-      metrics.cpu.setCpuUtilization(static_cast<double>(totalBurst) /
-                                    totalSimulationTime);
-    }
+    os_simulation_metrics::OsSimulationMetrics metrics = engine.getMetrics();
 
     printHeader("SIMULATION RESULTS: CPU METRICS (CFS)");
-    std::cout << std::left << std::setw(30)
-              << "Total Simulation Ticks:" << totalSimulationTime << "\n";
+    std::cout << std::left << std::setw(30) << "Total Simulation Ticks:"
+              << metrics.cpu.getTotalSimulationTicks() << "\n";
     std::cout << std::left << std::setw(30) << "CPU Utilization:" << std::fixed
-              << std::setprecision(2)
-              << (metrics.cpu.getCpuUtilization() * 100.0) << "%\n";
+              << std::setprecision(2) << (metrics.cpu.getCpuUtilization())
+              << "%\n";
     std::cout << std::left << std::setw(30)
               << "Throughput:" << std::defaultfloat
               << metrics.cpu.getThroughput() << " processes/tick\n";
@@ -122,10 +77,10 @@ int main(int argc, char *argv[]) {
               << "Avg Waiting Time:" << metrics.cpu.getAvgWaitingTime()
               << " ticks\n";
     std::cout << std::left << std::setw(30)
-              << "Avg Turnaround Time:" << metrics.cpu.getTurnaroundTime()
+              << "Avg Turnaround Time:" << metrics.cpu.getAvgTurnaroundTime()
               << " ticks\n";
     std::cout << std::left << std::setw(30)
-              << "Avg Response Time:" << metrics.cpu.getResponseTime()
+              << "Avg Response Time:" << metrics.cpu.getAvgResponseTime()
               << " ticks\n";
 
     printHeader("SIMULATION RESULTS: MEMORY METRICS (MGLRU)");

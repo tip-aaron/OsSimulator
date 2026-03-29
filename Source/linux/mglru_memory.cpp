@@ -28,6 +28,7 @@ bool os_simulation_memory::MglruMemoryManager::accessAddress(
 
     return true;
   }
+
   return false;
 }
 

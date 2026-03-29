@@ -36,17 +36,10 @@ class OsSimulationEngine {
   std::shared_ptr<os_simulation_memory::IMemoryManager> mMemoryManager;
 
   os_simulation_metrics::OsSimulationMetrics mMetrics;
-  uint64_t mTotalBusyTicks{0};
-  uint64_t mTotalSimulationTicks{0};
-
   std::unordered_map<int, std::vector<os_simulation_memory::TraceAccess>>
       mProcessTraces;
-  // Maps a Process ID to its current "instruction pointer" (which trace line
-  // it's on)
   std::unordered_map<int, size_t> mTraceAccessIndices;
 
   os_simulation_memory::TraceAccess getNextTraceForProcess(int processId);
-
-  void finalizeCpuMetrics();
 };
 }  // namespace os_simulation_engine

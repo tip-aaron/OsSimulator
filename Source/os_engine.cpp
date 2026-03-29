@@ -8,38 +8,55 @@ os_simulation_engine::OsSimulationEngine::OsSimulationEngine(
     : mScheduler(std::move(scheduler)),
       mMemoryManager(std::move(memoryManager)) {}
 
+// TODO: Change to DES
 void os_simulation_engine::OsSimulationEngine::runSimulation() {
   auto simStartTime = std::chrono::steady_clock::now();
   size_t totalProcesses = mProcessTraces.size();
 
   os_simulation_threading::ConsoleSpinnerReporter progressReporter(
-      [&]() -> size_t {
-        size_t completeCount = 0;
-
-        for (const auto &[pid, traces] : mProcessTraces) {
-          const auto &proc = mScheduler->getProcess(pid);
-
-          if (proc != nullptr && proc->getCompletionTime() > 0) {
-            completeCount++;
-          }
-        }
-
-        return completeCount;
-      });
+      [&]() -> size_t { return mMetrics.cpu.getCompletedProcessCount(); });
 
   progressReporter.start(totalProcesses);
 
+  std::optional<int> lastPid = std::nullopt;
+
   while (!mScheduler->isFinished()) {
     auto *pRunningProcess = mScheduler->getNextProcessToRun();
+    std::optional<int> currentPid =
+        pRunningProcess ? std::optional<int>(pRunningProcess->getId())
+                        : std::nullopt;
+    uint64_t currentTick = mMetrics.cpu.getTotalSimulationTicks();
+
+    if (currentPid != lastPid && lastPid.has_value() &&
+        currentPid.has_value()) {
+      uint64_t cost = os_simulation_architecture::CONTEXT_SWITCH_TICK_COST;
+
+      for (uint64_t i = 0; i < cost; ++i) {
+        mMetrics.timeline.recordCpuEvent(
+            currentTick + i, os_simulation_metrics::CpuState::CONTEXT_SWITCH);
+        mMetrics.cpu.recordTick(false);
+      }
+
+      mMetrics.cpu.recordContextSwitch(cost);
+      currentTick = mMetrics.cpu.getTotalSimulationTicks();
+    }
 
     if (pRunningProcess != nullptr) {
-      int pid = pRunningProcess->getId();
+      int pid = currentPid.value();
       os_simulation_memory::TraceAccess nextTraceAccess =
           getNextTraceForProcess(pid);
       bool isHit = mMemoryManager->accessAddress(
           pid, nextTraceAccess.mVirtualAddress, nextTraceAccess.mAccessType);
 
+      mMetrics.memory.recordAccess(pid);
+      mMetrics.timeline.recordMemoryEvent(currentTick, pid, !isHit);
+
       if (!isHit) {
+        mMetrics.cpu.recordTick(false);
+        mMetrics.memory.recordPageFault(pid);
+        mMetrics.timeline.recordCpuEvent(currentTick,
+                                         os_simulation_metrics::CpuState::IDLE);
+
         mMemoryManager->handlePageFault(pRunningProcess->getId(),
                                         nextTraceAccess.mVirtualAddress,
                                         nextTraceAccess.mAccessType);
@@ -48,15 +65,33 @@ void os_simulation_engine::OsSimulationEngine::runSimulation() {
 
         mTraceAccessIndices[pid]--;
       } else {
+        mMetrics.cpu.recordTick(true);
+        mMetrics.timeline.recordCpuEvent(
+            currentTick, os_simulation_metrics::CpuState::EXECUTING_PROCESS,
+            pid);
         mScheduler->executeProcess(pRunningProcess);
+
+        if (pRunningProcess->isFinished()) {
+          uint64_t turnaround = pRunningProcess->getCompletionTime() -
+                                pRunningProcess->getArrivalTime();
+          uint64_t response = pRunningProcess->getStartTime() -
+                              pRunningProcess->getArrivalTime();
+          uint64_t wait = turnaround - pRunningProcess->getBurstTime();
+
+          mMetrics.cpu.recordProcessCompletion(turnaround, response, wait);
+        }
       }
+    } else {
+      mMetrics.cpu.recordTick(false);
+      mMetrics.timeline.recordCpuEvent(currentTick,
+                                       os_simulation_metrics::CpuState::IDLE);
     }
 
     mScheduler->addTick();
+    lastPid = currentPid;
   }
 
   progressReporter.stop();
-
   auto simEndTime = std::chrono::steady_clock::now();
   float totalSec = std::chrono::duration_cast<std::chrono::milliseconds>(
                        simEndTime - simStartTime)
