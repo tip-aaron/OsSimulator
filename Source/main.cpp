@@ -1,6 +1,5 @@
 #include <algorithm>
-#include <iomanip>
-#include <iostream>
+#include <cstdio>
 #include <limits>
 #include <memory>
 #include <vector>
@@ -11,22 +10,22 @@
 #include "workload_parser.hpp"
 
 void printHeader(const std::string &title) {
-  std::cout << "\n======================================================\n";
-  std::cout << "  " << title << "\n";
-  std::cout << "======================================================\n";
+  printf("\n======================================================\n");
+  printf("  %s\n", title);
+  printf("======================================================\n");
 }
 
 int main(int argc, char *argv[]) {
   if (argc < 2) {
-    std::cerr << "Usage: " << argv[0] << " <PROJECT_ROOT_PATH>\n";
-    std::cerr << "Example: " << argv[0] << " ../workloads/\n";
+    fprintf(stderr, "Usage: %s <PROJECT_ROOT_PATH>\n", argv[0]);
+    fprintf(stderr, "Example: %s ../workloads/\n", argv[0]);
 
     return 1;
   }
 
   std::string projectRoot = argv[1];
 
-  std::cout << "Starting simulation with project root: " << projectRoot << "\n";
+  printf("Starting simulation with project root: %s\n", projectRoot.c_str());
 
   std::shared_ptr<os_simulation_scheduler::IScheduler> scheduler =
       os_simulation_factory::createScheduler();
@@ -42,7 +41,7 @@ int main(int argc, char *argv[]) {
         os_simulation_parser::WorkloadType::MIXED_INTERACTIVE_BACKGROUND;
 
     printHeader("SIMULATION INITIALIZATION");
-    std::cout << "Parsing workload scenario...\n";
+    printf("Parsing workload scenario...\n");
 
     auto workloads = parser.parse(currentWorkload);
 
@@ -52,50 +51,40 @@ int main(int argc, char *argv[]) {
       return 1;
     }
 
-    std::cout << "Successfully loaded " << workloads.size()
-              << " processes...\n";
-    std::cout << "Preparing all processes for simulation...\n";
+    printf("Successfully loaded %zu processes...\n", workloads.size());
+    printf("Preparing all processes for simulation...\n");
     engine.loadWorkload(workloads, parser);
-    std::cout << "All processes have been prepared!...\n";
+    printf("All processes have been prepared!...\n");
 
-    std::cout << "Executing OS Simulation...\n";
+    printf("Executing OS Simulation...\n");
     engine.runSimulation();
-    std::cout << "Simulation completed successfully!\n";
+    printf("Simulation completed successfully!\n");
 
     os_simulation_metrics::OsSimulationMetrics metrics = engine.getMetrics();
 
     printHeader("SIMULATION RESULTS: CPU METRICS (CFS)");
-    std::cout << std::left << std::setw(30) << "Total Simulation Ticks:"
-              << metrics.cpu.getTotalSimulationTicks() << "\n";
-    std::cout << std::left << std::setw(30) << "CPU Utilization:" << std::fixed
-              << std::setprecision(2) << (metrics.cpu.getCpuUtilization())
-              << "%\n";
-    std::cout << std::left << std::setw(30)
-              << "Throughput:" << std::defaultfloat
-              << metrics.cpu.getThroughput() << " processes/tick\n";
-    std::cout << std::left << std::setw(30)
-              << "Avg Waiting Time:" << metrics.cpu.getAvgWaitingTime()
-              << " ticks\n";
-    std::cout << std::left << std::setw(30)
-              << "Avg Turnaround Time:" << metrics.cpu.getAvgTurnaroundTime()
-              << " ticks\n";
-    std::cout << std::left << std::setw(30)
-              << "Avg Response Time:" << metrics.cpu.getAvgResponseTime()
-              << " ticks\n";
+    printf("%-30s %llu\n", "Total Simulation Ticks:",
+           (unsigned long long)metrics.cpu.getTotalSimulationTicks());
+    printf("%-30s %.2f%%\n",
+           "CPU Utilization:", metrics.cpu.getCpuUtilization());
+    printf("%-30s %g processes/tick\n",
+           "Throughput:", metrics.cpu.getThroughput());
+    printf("%-30s %.2f ticks\n",
+           "Avg Waiting Time:", metrics.cpu.getAvgWaitingTime());
+    printf("%-30s %.2f ticks\n",
+           "Avg Turnaround Time:", metrics.cpu.getAvgTurnaroundTime());
+    printf("%-30s %.2f ticks\n",
+           "Avg Response Time:", metrics.cpu.getAvgResponseTime());
 
     printHeader("SIMULATION RESULTS: MEMORY METRICS (MGLRU)");
-    std::cout << std::left << std::setw(30)
-              << "Total Memory Accesses:" << metrics.memory.getTotalAccesses()
-              << "\n";
-    std::cout << std::left << std::setw(30)
-              << "Total Page Faults:" << metrics.memory.getTotalPageFaults()
-              << "\n";
-    std::cout << std::left << std::setw(30) << "Page Fault Rate:" << std::fixed
-              << std::setprecision(4)
-              << (metrics.memory.getPageFaultRate() * 100.0) << "%\n";
+    printf("%-30s %zu\n",
+           "Total Memory Accesses:", metrics.memory.getTotalAccesses());
+    printf("%-30s %zu\n",
+           "Total Page Faults:", metrics.memory.getTotalPageFaults());
+    printf("%-30s %.4f%%\n",
+           "Page Fault Rate:", metrics.memory.getPageFaultRate() * 100.0);
 
-    // Print Top 5 Processes by Page Faults to give insight into thrashing
-    std::cout << "\n--- Top 5 Processes by Page Faults ---\n";
+    printf("\n--- Top 5 Processes by Page Faults ---\n");
 
     auto faultMap = metrics.memory.getPerProcessFaultMap();
 
@@ -107,14 +96,14 @@ int main(int argc, char *argv[]) {
 
     int count = 0;
     for (const auto &[pid, faults] : sortedFaults) {
-      std::cout << "PID " << std::left << std::setw(5) << pid << ": " << faults
-                << " faults\n";
+      printf("PID %-5d: %d faults\n", pid, faults);
+
       if (++count >= 5) break;
     }
     std::cout << "======================================================\n";
 
   } catch (const std::exception &e) {
-    std::cerr << "\n[CRITICAL ERROR] " << e.what() << "\n";
+    fprintf(stderr, "\n[CRITICAL ERROR] %s\n", e.what());
     return 1;
   }
 
