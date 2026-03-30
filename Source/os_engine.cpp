@@ -1,5 +1,4 @@
 #include <cstdio>
-#include <iostream>
 #include <os_engine.hpp>
 
 namespace os_simulation_engine {
@@ -167,8 +166,8 @@ void OsSimulationEngine::runSimulation() {
         // 2. remainingBurstTime: The current process finishes
         // 3. preemptionDelay: The Scheduler says "Time's up, I need to check
         // others"
-        uint64_t executionLimit =
-            std::min({timeToNextEvent, remainingBurstTime, preemptionDelay});
+        uint64_t executionLimit = std::min(
+            std::min(timeToNextEvent, remainingBurstTime), preemptionDelay);
         uint64_t ticksExecuted = 0;
         bool pageFaulted = false;
 

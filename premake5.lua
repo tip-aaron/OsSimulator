@@ -1,3 +1,5 @@
+require "premake-export-compile-commands/export-compile-commands"
+
 workspace("OsSimulator")
 architecture("x86_64")
 startproject("LinuxSimulator")
@@ -15,18 +17,21 @@ defines({ "DEBUG" })
 symbols("On")
 
 filter("system:windows")
-    systemversion("latest")
+systemversion("latest")
+
+filter("system:linux")
+toolset("clang")
 
 filter("action:vs* or toolset:msc")
-    buildoptions({ "/Zc:__cplusplus" })
+buildoptions({ "/Zc:__cplusplus" })
 
 filter("toolset:gcc or toolset:clang")
-    buildoptions({ "-Wall", "-Wextra" })
+buildoptions({ "-Wall", "-Wextra" })
 filter("{}")
 newaction {
     trigger     = "clean_build",
     description = "Cleans all build artifacts (object files, binaries, etc.) and cache but keeps generated project files",
-    execute     = function ()
+    execute     = function()
         print("Cleaning build directories...")
 
         local dirs = {
@@ -47,7 +52,7 @@ newaction {
 newaction {
     trigger     = "clean_project",
     description = "Cleans absolutely all Premake-generated files and build artifacts",
-    execute     = function ()
+    execute     = function()
         print("Cleaning build and cache directories...")
 
         local dirs = {

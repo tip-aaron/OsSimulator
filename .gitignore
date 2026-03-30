@@ -79,6 +79,7 @@ ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
 
+compile_commands*
 
 workloads/
 !workloads/README.md

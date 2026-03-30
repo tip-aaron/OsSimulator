@@ -72,6 +72,11 @@ esac
     exit 1
 }
 
+"$PREMAKE" export-compile-commands || {
+    echo "Error: Premake failed to generate compiler instructions"
+    exit 1
+}
+
 echo ""
 echo "Downloading submodules..."
 git submodule update --init --recursive || {

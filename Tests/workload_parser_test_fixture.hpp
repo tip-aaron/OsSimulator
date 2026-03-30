@@ -37,7 +37,7 @@ class WorkloadParserTest : public ::testing::Test {
 
   void createMockTraceFile(const WorkloadType &type, int processId) {
     fs::path tracePath = tempRoot / "workloads" / to_string(type) / "traces" /
-                         ("process" + std::to_string(processId) + ".ref");
+                         ("process_" + std::to_string(processId) + ".ref");
     std::ofstream file(tracePath);
     file << "dummy trace data";  // Just needs to exist
     file.close();

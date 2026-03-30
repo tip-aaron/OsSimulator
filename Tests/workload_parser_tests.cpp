@@ -35,11 +35,11 @@ TEST_F(WorkloadParserTest, ParseSuccessfullyReadsValidCsv) {
 
   EXPECT_EQ(workloads[0].mProcess.getId(), 1);
   EXPECT_EQ(workloads[0].mProcess.getPriority(), 7);
-  EXPECT_EQ(workloads[0].mTraceFilePath.filename(), "process1.ref");
+  EXPECT_EQ(workloads[0].mTraceFilePath.filename(), "process_1.ref");
 
   EXPECT_EQ(workloads[1].mProcess.getId(), 2);
   EXPECT_EQ(workloads[1].mProcess.getPriority(), 9);
-  EXPECT_EQ(workloads[1].mTraceFilePath.filename(), "process2.ref");
+  EXPECT_EQ(workloads[1].mTraceFilePath.filename(), "process_2.ref");
 }
 
 TEST_F(WorkloadParserTest, ParseTraceFileThrowsOnBadFormat) {

@@ -2,3 +2,6 @@
 	path = vendor/googletest
 	url = https://github.com/google/googletest.git
 	ignore = all
+[submodule "premake-export-compile-commands"]
+	path = premake-export-compile-commands
+	url = https://github.com/tarruda/premake-export-compile-commands.git
