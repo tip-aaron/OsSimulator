@@ -74,7 +74,6 @@ AlignTrailingComments:
 AllowAllArgumentsOnNextLine: true
 AllowAllParametersOfDeclarationOnNextLine: true
 AllowBreakBeforeNoexceptSpecifier: Never
-AllowBreakBeforeQtProperty: false
 AllowShortBlocksOnASingleLine: Never
 AllowShortCaseExpressionOnASingleLine: true
 AllowShortCaseLabelsOnASingleLine: false
@@ -119,19 +118,9 @@ BraceWrapping:
 BreakAdjacentStringLiterals: true
 BreakAfterAttributes: Leave
 BreakAfterJavaFieldAnnotations: false
-BreakAfterOpenBracketBracedList: false
-BreakAfterOpenBracketFunction: false
-BreakAfterOpenBracketIf: false
-BreakAfterOpenBracketLoop: false
-BreakAfterOpenBracketSwitch: false
 BreakAfterReturnType: None
 BreakArrays: true
 BreakBeforeBinaryOperators: None
-BreakBeforeCloseBracketBracedList: false
-BreakBeforeCloseBracketFunction: false
-BreakBeforeCloseBracketIf: false
-BreakBeforeCloseBracketLoop: false
-BreakBeforeCloseBracketSwitch: false
 BreakBeforeConceptDeclarations: Always
 BreakBeforeBraces: Attach
 BreakBeforeInlineASMColon: OnlyMultiline
@@ -148,7 +137,6 @@ CommentPragmas: "^ IWYU pragma:"
 CompactNamespaces: false
 ConstructorInitializerIndentWidth: 4
 ContinuationIndentWidth: 4
-Cpp11BracedListStyle: AlignFirstComment
 DerivePointerAlignment: false
 DisableFormat: false
 EmptyLineAfterAccessModifier: Never
@@ -222,11 +210,6 @@ MacroBlockEnd: ""
 MainIncludeChar: Quote
 MaxEmptyLinesToKeep: 1
 NamespaceIndentation: None
-NumericLiteralCase:
-  ExponentLetter: Leave
-  HexDigit: Leave
-  Prefix: Leave
-  Suffix: Leave
 ObjCBinPackProtocolList: Never
 ObjCBlockIndentWidth: 2
 ObjCBreakBeforeNestedBlockParam: true

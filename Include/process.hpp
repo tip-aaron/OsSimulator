@@ -69,15 +69,21 @@ struct Process {
     }
   }
 
-  [[nodiscard]] uint64_t getWaitTime() {
-    return getTurnaroundTime() - mBurstTime;
+  [[nodiscard]] uint64_t getWaitTime() const {
+    uint64_t turnaround = getTurnaroundTime();
+
+    return (turnaround > mBurstTime) ? (turnaround - mBurstTime) : 0;
   }
 
-  [[nodiscard]] uint64_t getTurnaroundTime() {
-    return mCompletionTime - mArrivalTime;
+  [[nodiscard]] uint64_t getTurnaroundTime() const {
+    return (mCompletionTime > mArrivalTime) ? (mCompletionTime - mArrivalTime) : 0;
   }
 
-  [[nodiscard]] uint64_t getResponseTime() {
+  [[nodiscard]] uint64_t getResponseTime() const {
+    if (!mStartTime.second || mStartTime.first < mArrivalTime) {
+      return 0;
+    }
+
     return mStartTime.first - mArrivalTime;
   }
 
