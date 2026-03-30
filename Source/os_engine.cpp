@@ -1,122 +1,45 @@
+#include <cstdio>
+#include <iostream>
 #include <os_engine.hpp>
 
-#include "utils/threading.hpp"
+namespace os_simulation_engine {
 
-os_simulation_engine::OsSimulationEngine::OsSimulationEngine(
+OsSimulationEngine::OsSimulationEngine(
     std::shared_ptr<os_simulation_scheduler::IScheduler> scheduler,
     std::shared_ptr<os_simulation_memory::IMemoryManager> memoryManager)
     : mScheduler(std::move(scheduler)),
       mMemoryManager(std::move(memoryManager)) {}
 
-// TODO: Change to DES
-void os_simulation_engine::OsSimulationEngine::runSimulation() {
-  auto simStartTime = std::chrono::steady_clock::now();
-  size_t totalProcesses = mProcessTraces.size();
+void OsSimulationEngine::scheduleNextEvent(
+    uint64_t delay, os_simulation_discrete_event::SimulationEventType type,
+    std::optional<uint16_t> pid) {
+  os_simulation_discrete_event::SimulationEvent event;
+  event.mTimestamp = mCurrentTime + delay;
+  event.mEventType = type;
+  event.mPid = pid;
 
-  os_simulation_threading::ConsoleSpinnerReporter progressReporter(
-      [&]() -> size_t { return mMetrics.cpu.getCompletedProcessCount(); });
-
-  progressReporter.start(totalProcesses);
-
-  std::optional<int> lastPid = std::nullopt;
-
-  while (!mScheduler->isFinished()) {
-    auto *pRunningProcess = mScheduler->getNextProcessToRun();
-    std::optional<int> currentPid =
-        pRunningProcess ? std::optional<int>(pRunningProcess->getId())
-                        : std::nullopt;
-    uint64_t currentTick = mMetrics.cpu.getTotalSimulationTicks();
-
-    if (currentPid != lastPid && lastPid.has_value() &&
-        currentPid.has_value()) {
-      uint64_t cost = os_simulation_architecture::CONTEXT_SWITCH_TICK_COST;
-
-      for (uint64_t i = 0; i < cost; ++i) {
-        mMetrics.timeline.recordCpuEvent(
-            currentTick + i, os_simulation_metrics::CpuState::CONTEXT_SWITCH);
-        mMetrics.cpu.recordTick(false);
-      }
-
-      mMetrics.cpu.recordContextSwitch(cost);
-      currentTick = mMetrics.cpu.getTotalSimulationTicks();
-    }
-
-    if (pRunningProcess != nullptr) {
-      int pid = currentPid.value();
-      os_simulation_memory::TraceAccess nextTraceAccess =
-          getNextTraceForProcess(pid);
-      bool isHit = mMemoryManager->accessAddress(
-          pid, nextTraceAccess.mVirtualAddress, nextTraceAccess.mAccessType);
-
-      mMetrics.memory.recordAccess(pid);
-      mMetrics.timeline.recordMemoryEvent(currentTick, pid, !isHit);
-
-      if (!isHit) {
-        mMetrics.cpu.recordTick(false);
-        mMetrics.memory.recordPageFault(pid);
-        mMetrics.timeline.recordCpuEvent(currentTick,
-                                         os_simulation_metrics::CpuState::IDLE);
-
-        mMemoryManager->handlePageFault(pRunningProcess->getId(),
-                                        nextTraceAccess.mVirtualAddress,
-                                        nextTraceAccess.mAccessType);
-        pRunningProcess->block(
-            os_simulation_architecture::BACKING_STORE_LATENCY_MS);
-
-        mTraceAccessIndices[pid]--;
-      } else {
-        mMetrics.cpu.recordTick(true);
-        mMetrics.timeline.recordCpuEvent(
-            currentTick, os_simulation_metrics::CpuState::EXECUTING_PROCESS,
-            pid);
-        mScheduler->executeProcess(pRunningProcess);
-
-        if (pRunningProcess->isFinished()) {
-          mMetrics.cpu.recordProcessCompletion(
-              pRunningProcess->getTurnaroundTime(),
-              pRunningProcess->getResponseTime(),
-              pRunningProcess->getWaitTime());
-        }
-      }
-    } else {
-      mMetrics.cpu.recordTick(false);
-      mMetrics.timeline.recordCpuEvent(currentTick,
-                                       os_simulation_metrics::CpuState::IDLE);
-    }
-
-    mScheduler->addTick();
-    lastPid = currentPid;
-  }
-
-  progressReporter.stop();
-
-  auto simEndTime = std::chrono::steady_clock::now();
-  float totalSec = std::chrono::duration_cast<std::chrono::milliseconds>(
-                       simEndTime - simStartTime)
-                       .count() /
-                   1000.0f;
-
-  printf("Engine finished crunching in %.2f seconds.\n", totalSec);
+  mEventQueue.push(event);
 }
 
-void os_simulation_engine::OsSimulationEngine::loadWorkload(
+void OsSimulationEngine::loadWorkload(
     const std::vector<os_simulation_parser::ProcessWorkload> &rWorkloads,
     const os_simulation_parser::WorkloadParser &rParser) {
   for (const auto &rWorkload : rWorkloads) {
     mScheduler->addProcess(rWorkload.mProcess);
 
-    std::vector<os_simulation_memory::TraceAccess> traceAccessVec =
-        rParser.parseTraceFile(rWorkload.mTraceFilePath);
-    int pid = rWorkload.mProcess.getId();
-    mProcessTraces[pid] = std::move(traceAccessVec);
-
+    uint16_t pid = rWorkload.mProcess.getId();
+    mProcessTraces[pid] = rParser.parseTraceFile(rWorkload.mTraceFilePath);
     mTraceAccessIndices[pid] = 0;
+
+    scheduleNextEvent(
+        rWorkload.mProcess.getArrivalTime(),
+        os_simulation_discrete_event::SimulationEventType::PROCESS_ARRIVAL,
+        pid);
   }
 }
 
-os_simulation_memory::TraceAccess
-os_simulation_engine::OsSimulationEngine::getNextTraceForProcess(
-    int processId) {
+os_simulation_memory::TraceAccess OsSimulationEngine::getNextTraceForProcess(
+    uint16_t processId) {
   auto traceIt = mProcessTraces.find(processId);
   auto indexIt = mTraceAccessIndices.find(processId);
 
@@ -129,15 +52,192 @@ os_simulation_engine::OsSimulationEngine::getNextTraceForProcess(
   size_t currentLineIndex = indexIt->second;
 
   if (currentLineIndex >= traces.size()) {
-    std::cerr << "Process " << processId << " outran its trace file!\n";
-
+    fprintf(
+        stderr,
+        "Warning: Process %u outran its trace file! Defaulting to read 0x0.\n",
+        processId);
     return {0x0, os_simulation_memory::MemoryAccessType::READ};
   }
 
   os_simulation_memory::TraceAccess currentTraceAccess =
       traces[currentLineIndex];
-
   mTraceAccessIndices[processId]++;
 
   return currentTraceAccess;
 }
+
+void OsSimulationEngine::runSimulation() {
+  while (!mEventQueue.empty() && !mScheduler->isFinished()) {
+    os_simulation_discrete_event::SimulationEvent event = mEventQueue.top();
+
+    mEventQueue.pop();
+
+    if (event.mTimestamp > mCurrentTime) {
+      if (!mIsCpuBusy) {
+        mMetrics.timeline.recordCpuBlock(mCurrentTime, event.mTimestamp,
+                                         os_simulation_metrics::CpuState::IDLE);
+      }
+
+      mCurrentTime = event.mTimestamp;
+    }
+
+    switch (event.mEventType) {
+      case os_simulation_discrete_event::SimulationEventType::PROCESS_ARRIVAL:
+      case os_simulation_discrete_event::SimulationEventType::
+          PAGE_FAULT_RESOLVED: {
+        mScheduler->readyProcess(event.mPid.value());
+
+        scheduleNextEvent(
+            0, os_simulation_discrete_event::SimulationEventType::DISPATCH);
+
+        break;
+      }
+      case os_simulation_discrete_event::SimulationEventType::DISPATCH: {
+        while (
+            !mEventQueue.empty() &&
+            mEventQueue.top().mTimestamp == mCurrentTime &&
+            mEventQueue.top().mEventType ==
+                os_simulation_discrete_event::SimulationEventType::DISPATCH) {
+          mEventQueue.pop();
+        }
+
+        if (!mEventQueue.empty() &&
+            mEventQueue.top().mTimestamp == mCurrentTime) {
+          scheduleNextEvent(
+              0, os_simulation_discrete_event::SimulationEventType::DISPATCH);
+          break;
+        }
+
+        if (mIsCpuBusy) {
+          break;
+        }
+
+        auto *pRunningProcess = mScheduler->getNextProcessToRun();
+
+        if (pRunningProcess == nullptr) {
+          mIsCpuBusy = false;
+
+          continue;
+        }
+
+        pRunningProcess->dispatch(mCurrentTime);
+
+        mIsCpuBusy = true;
+        uint16_t runningProcessId = pRunningProcess->getId();
+
+        if (mLastPid.has_value() && mLastPid.value() != runningProcessId) {
+          uint64_t switchCost =
+              os_simulation_architecture::CONTEXT_SWITCH_TICK_COST;
+
+          if (switchCost > 0) {
+            mMetrics.timeline.recordCpuBlock(
+                mCurrentTime, mCurrentTime + switchCost,
+                os_simulation_metrics::CpuState::CONTEXT_SWITCH);
+            mMetrics.cpu.recordContextSwitch(switchCost);
+
+            mCurrentTime += switchCost;
+          }
+        }
+
+        mLastPid = runningProcessId;
+        uint64_t timeToNextEvent = UINT64_MAX;
+
+        if (!mEventQueue.empty()) {
+          if (mEventQueue.top().mTimestamp <= mCurrentTime) {
+            timeToNextEvent = 0;
+          } else {
+            timeToNextEvent = mEventQueue.top().mTimestamp - mCurrentTime;
+          }
+        }
+
+        if (timeToNextEvent == 0) {
+          mIsCpuBusy = false;
+          pRunningProcess->preempt();
+          mScheduler->preemptProcess(pRunningProcess);
+          scheduleNextEvent(
+              0, os_simulation_discrete_event::SimulationEventType::DISPATCH);
+          break;
+        }
+
+        uint64_t preemptionDelay =
+            mScheduler->getPreemptionDelay(pRunningProcess);
+        uint64_t remainingBurstTime = pRunningProcess->getRemainingTime();
+        // The DES "Jump" limit:
+        // 1. timeToNextEvent: Someone new arrives or a page fault finishes
+        // 2. remainingBurstTime: The current process finishes
+        // 3. preemptionDelay: The Scheduler says "Time's up, I need to check
+        // others"
+        uint64_t executionLimit =
+            std::min({timeToNextEvent, remainingBurstTime, preemptionDelay});
+        uint64_t ticksExecuted = 0;
+        bool pageFaulted = false;
+
+        uint64_t startExecuteTick = mCurrentTime;
+
+        while (ticksExecuted < executionLimit) {
+          os_simulation_memory::TraceAccess trace =
+              getNextTraceForProcess(runningProcessId);
+          bool isHit = mMemoryManager->accessAddress(
+              runningProcessId, trace.mVirtualAddress, trace.mAccessType);
+
+          mMetrics.memory.recordAccess(runningProcessId);
+
+          if (!isHit) {
+            mMemoryManager->handlePageFault(
+                runningProcessId, trace.mVirtualAddress, trace.mAccessType);
+            mMetrics.memory.recordPageFault(runningProcessId);
+            mMetrics.timeline.recordMemoryEvent(
+                startExecuteTick + ticksExecuted, runningProcessId, true);
+
+            pageFaulted = true;
+
+            mTraceAccessIndices[runningProcessId]--;
+
+            break;
+          } else {
+            mMetrics.timeline.recordMemoryEvent(
+                startExecuteTick + ticksExecuted, runningProcessId, false);
+          }
+
+          ticksExecuted++;
+        }
+
+        mCurrentTime += ticksExecuted;
+
+        mMetrics.timeline.recordCpuBlock(
+            startExecuteTick, startExecuteTick + ticksExecuted,
+            os_simulation_metrics::CpuState::EXECUTING_PROCESS,
+            runningProcessId);
+        mMetrics.cpu.recordBusyTime(ticksExecuted);
+        mScheduler->updateProcessExecution(pRunningProcess, ticksExecuted,
+                                           mCurrentTime);
+        if (pageFaulted) {
+          pRunningProcess->block();
+          scheduleNextEvent(
+              os_simulation_architecture::BACKING_STORE_LATENCY_MS,
+              os_simulation_discrete_event::SimulationEventType::
+                  PAGE_FAULT_RESOLVED,
+              runningProcessId);
+        } else if (!pRunningProcess->isFinished()) {
+          mScheduler->preemptProcess(pRunningProcess);
+        } else if (pRunningProcess->isFinished()) {
+          mMetrics.cpu.recordProcessCompletion(
+              pRunningProcess->getTurnaroundTime(),
+              pRunningProcess->getResponseTime(),
+              pRunningProcess->getWaitTime());
+        }
+
+        mIsCpuBusy = false;
+
+        scheduleNextEvent(
+            0, os_simulation_discrete_event::SimulationEventType::DISPATCH);
+
+        break;
+      }
+    }
+  }
+
+  mMetrics.cpu.setTotalSimulationTicks(mCurrentTime);
+}
+
+}  // namespace os_simulation_engine

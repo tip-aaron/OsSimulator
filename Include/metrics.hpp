@@ -5,18 +5,19 @@
 #include <vector>
 
 namespace os_simulation_metrics {
+
 enum class CpuState { EXECUTING_PROCESS, IDLE, CONTEXT_SWITCH };
 
 struct CpuTimelineEvent {
   uint64_t mStartTick;
   uint64_t mEndTick;
   CpuState mCpuState;
-  std::optional<int> mProcessId;
+  std::optional<uint16_t> mProcessId;
 };
 
 struct MemoryTimelineEvent {
   uint64_t mTick;
-  int mProcessId;
+  uint16_t mProcessId;
   bool mWasPageFault;
 };
 
@@ -26,30 +27,28 @@ struct TimeSeriesMetrics {
   std::vector<MemoryTimelineEvent> mMemoryTimeline;
 
  public:
-  void recordCpuEvent(uint64_t tick, CpuState state,
-                      std::optional<int> processId = std::nullopt) {
-    bool isNewEventBlock = true;
+  void initialize(size_t expectedEvents) {
+    mCpuTimeline.reserve(expectedEvents);
+    mMemoryTimeline.reserve(expectedEvents);
+  }
+
+  void recordCpuBlock(uint64_t startTick, uint64_t endTick, CpuState state,
+                      std::optional<uint16_t> processId = std::nullopt) {
+    if (startTick == endTick) return;
 
     if (!mCpuTimeline.empty()) {
-      auto &lastEvent = mCpuTimeline.back();
-
-      // We only merge if:
-      // 1. The state is exactly the same
-      // 2. AND the processId is exactly the same (both nullopt, or both the
-      // same ID)
-      if (lastEvent.mCpuState == state && lastEvent.mProcessId == processId) {
-        isNewEventBlock = false;
+      auto &rLastEvent = mCpuTimeline.back();
+      if (rLastEvent.mCpuState == state && rLastEvent.mProcessId == processId &&
+          rLastEvent.mEndTick == startTick) {
+        rLastEvent.mEndTick = endTick;
+        return;
       }
     }
 
-    if (isNewEventBlock) {
-      mCpuTimeline.push_back({tick, tick, state, processId});
-    } else {
-      mCpuTimeline.back().mEndTick = tick;
-    }
+    mCpuTimeline.push_back({startTick, endTick, state, processId});
   }
 
-  void recordMemoryEvent(uint64_t tick, int processId, bool isPageFault) {
+  void recordMemoryEvent(uint64_t tick, uint16_t processId, bool isPageFault) {
     mMemoryTimeline.push_back({tick, processId, isPageFault});
   }
 
@@ -82,11 +81,12 @@ struct CpuMetrics {
     mTotalContextSwitchTicks += duration;
   }
 
-  void recordTick(bool isBusy) {
-    mTotalSimulationTicks++;
-    if (isBusy) {
-      mTotalBusyTicks++;
-    }
+  void recordBusyTime(uint64_t busyDuration) {
+    mTotalBusyTicks += busyDuration;
+  }
+
+  void setTotalSimulationTicks(uint64_t totalTicks) {
+    mTotalSimulationTicks = totalTicks;
   }
 
   void recordProcessCompletion(uint64_t turnaround, uint64_t response,
@@ -154,18 +154,20 @@ struct MemoryMetrics {
   uint32_t mTotalPageFaults{0};
   uint32_t mTotalMemoryAccesses{0};
 
-  std::unordered_map<int, uint32_t> mPageFaultsPerProcess;
+  std::unordered_map<uint16_t, uint32_t> mPageFaultsPerProcess;
 
  public:
-  void recordAccess(int processId) {
-    mTotalMemoryAccesses++;
-
-    if (mPageFaultsPerProcess.find(processId) == mPageFaultsPerProcess.end()) {
-      mPageFaultsPerProcess[processId] = 0;
-    }
+  void initialize(size_t processCount) {
+    mPageFaultsPerProcess.reserve(processCount);
   }
 
-  void recordPageFault(int processId) {
+  void recordAccess(uint16_t processId) {
+    mTotalMemoryAccesses++;
+
+    mPageFaultsPerProcess.try_emplace(processId, 0);
+  }
+
+  void recordPageFault(uint16_t processId) {
     mTotalPageFaults++;
     mPageFaultsPerProcess[processId]++;
   }
@@ -178,11 +180,10 @@ struct MemoryMetrics {
 
   [[nodiscard]] double getPageFaultRate() const {
     if (mTotalMemoryAccesses == 0) return 0.0;
-
     return static_cast<double>(mTotalPageFaults) / mTotalMemoryAccesses;
   }
 
-  [[nodiscard]] uint32_t getPageFaultsForProcess(int processId) const {
+  [[nodiscard]] uint32_t getPageFaultsForProcess(uint16_t processId) const {
     auto it = mPageFaultsPerProcess.find(processId);
     if (it != mPageFaultsPerProcess.end()) {
       return it->second;
@@ -190,8 +191,8 @@ struct MemoryMetrics {
     return 0;
   }
 
-  [[nodiscard]] const std::unordered_map<int, uint32_t> &getPerProcessFaultMap()
-      const {
+  [[nodiscard]] const std::unordered_map<uint16_t, uint32_t> &
+  getPerProcessFaultMap() const {
     return mPageFaultsPerProcess;
   }
 };
@@ -200,5 +201,11 @@ struct OsSimulationMetrics {
   CpuMetrics cpu;
   MemoryMetrics memory;
   TimeSeriesMetrics timeline;
+
+  void initialize(size_t processCount, size_t expectedTimelineEvents = 10000) {
+    memory.initialize(processCount);
+    timeline.initialize(expectedTimelineEvents);
+  }
 };
+
 }  // namespace os_simulation_metrics

@@ -52,38 +52,103 @@ constexpr uint32_t SCHED_PRIO_TO_WMULT[40] = {
 // === END LINUX KERNEL CODE ===
 
 namespace os_simulation_linux_scheduler {
+
+struct CfsNode {
+  os_simulation_process::Process mProcess;
+
+  uint64_t mVruntime{0};
+  uint32_t mWeight{0};
+  uint32_t mInverseWeight{0};
+
+  // explicit to avoid implicit conversions of Process.
+  explicit CfsNode(const os_simulation_process::Process &rProcess);
+};
+
+enum class RbColor { RED, BLACK };
+
+/**
+ * @brief Internal node structure for the Red-Black Tree
+ */
+struct RbNode {
+  CfsNode *pCfsNode{nullptr};
+  uint64_t mVruntime{0};
+
+  RbNode *pParent{nullptr};
+  RbNode *pLeft{nullptr};
+  RbNode *pRight{nullptr};
+
+  RbColor mColor{RbColor::BLACK};
+};
+
+/**
+ * @brief A custom Red-Black Tree optimized for the Linux CFS simulation.
+ * Sorts nodes based on their virtual runtime (vruntime).
+ */
+class RedBlackTree {
+ private:
+  RbNode *mRoot;
+  RbNode
+      *mNil;  // Sentinel node used to represent leaves and simplify edge cases
+
+  void rotateLeft(RbNode *pNode);
+  void rotateRight(RbNode *pNode);
+
+  void insertFixup(RbNode *pNode);
+  void removeFixup(RbNode *pNode);
+
+  void transplant(RbNode *pTarget, RbNode *pReplacement);
+  RbNode *getMinimum(RbNode *pNode) const;
+
+  void destroyTree(RbNode *pNode);
+
+ public:
+  RedBlackTree();
+  ~RedBlackTree();
+
+  // Disable copy/move to prevent accidental deep copy overheads
+  RedBlackTree(const RedBlackTree &) = delete;
+  RedBlackTree &operator=(const RedBlackTree &) = delete;
+
+  /**
+   * @brief Inserts a CfsNode into the tree based on its vruntime.
+   */
+  void insert(CfsNode *pCfsNode, uint64_t vruntime);
+
+  /**
+   * @brief Extracts and removes the node with the lowest vruntime.
+   * @return CfsNode* The node with the minimum vruntime, or nullptr if empty.
+   */
+  CfsNode *extractMin();
+};
+
 class LinuxCfsScheduler : public os_simulation_scheduler::IScheduler {
  private:
-  struct CfsNode {
-    os_simulation_process::Process process;
+  // The DES runqueue utilizing the custom Red-Black tree
+  RedBlackTree mRunQueue;
 
-    uint64_t mVruntime{0};
-    uint32_t mWeight{0};
-    uint32_t mInverseWeight{0};
-
-    // explicit to avoid implicit conversions of Process.
-    explicit CfsNode(const os_simulation_process::Process &rProcess);
-  };
-
-  std::vector<CfsNode> mNodes;
-  int mCurrentTime{0};
-
-  void updateProcessStates();
+  // The backing store for all process instances to prevent memory fragmentation
+  std::vector<CfsNode> mAllNodes;
 
   static uint64_t calcDelta(uint64_t deltaExec, uint64_t weight,
                             uint64_t inverseWeight);
 
  public:
   void addProcess(const os_simulation_process::Process &rProcess) override;
-  void addTick() override;
+  void readyProcess(uint16_t processId) override;
 
-  CfsNode *selectNextNode();
-  os_simulation_process::Process *getProcess(int processId) override;
+  uint64_t getPreemptionDelay(
+      os_simulation_process::Process *pProcess) override;
+  os_simulation_process::Process *getProcess(uint16_t processId) override;
   os_simulation_process::Process *getNextProcessToRun() override;
-  void executeProcess(os_simulation_process::Process *pProcess) override;
 
+  void updateProcessExecution(os_simulation_process::Process *pProcess,
+                              uint64_t executedTicks,
+                              uint64_t currentTime) override;
+
+  void preemptProcess(os_simulation_process::Process *pProcess) override;
   [[nodiscard]] bool isFinished() const override;
 
-  [[nodiscard]] const os_simulation_process::Process &getProcess(int id) const;
+  [[nodiscard]] const os_simulation_process::Process &getProcessConst(
+      uint16_t processId) const;
 };
 }  // namespace os_simulation_linux_scheduler
