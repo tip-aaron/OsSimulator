@@ -8,10 +8,8 @@
 - `function names` must begin with a verb and use camelCase
 - `function arguments` must use camelCase
 - `variable` names must use camelCase with optional camelCase_withUnderscore
-- `pointers` must begin with `p` and the '*' be placed exactly before the variable name.
-- `references` must begin with `r` and the '&' be place exactly before the variable name.
 - `constants` must be in ALL_CAPS
-- `file_names` must be in snake_case._
+- `file_names` must be in snake*case.*
 
 ## Performance Metrics
 
@@ -42,38 +40,35 @@ Below are instructions to setup this project on your local machine.
 Please follow the steps carefully to ensure a successful setup.
 
 1. Open **terminal** or **command prompt** and navigate to the root
-    directory of this project.
+   directory of this project.
+   - Example:
 
-    - Example:
-
-        ```bash
-        C:\Users\YourUsername>cd OsSimulator
-        ```
+     ```bash
+     C:\Users\YourUsername>cd OsSimulator
+     ```
 
 2. Run the `generate` script to generate project files and set up the
-    development environment.
+   development environment.
+   - On **Windows**:
 
-    - On **Windows**:
+     ```bash
+     C:\Users\YourUsername\OsSimulator>scripts\generate.bat
+     ```
 
-        ```bash
-        C:\Users\YourUsername\OsSimulator>scripts\generate.bat
-        ```
+   - On **Linux/macOS**:
 
-    - On **Linux/macOS**:
-
-        ```bash
-        C:/Users/YourUsername/OsSimulator>./scripts/generate.sh
-        ```
+     ```bash
+     C:/Users/YourUsername/OsSimulator>./scripts/generate.sh
+     ```
 
 3. Follow the prompts in the script to select your desired build system
-    and IDE.
+   and IDE.
 
 4. After the script completes, open your chosen code editor or IDE and choose this
-    project to start working on it.
-
-    - If you chose **Visual Studio**, you can *click* on the generated `.sln` file to open the project right away.
-    - If you chose **Visual Studio Code**, you can *open* the project folder and it should automatically detect the generated build files.
-    - If you chose **CLion**, you can *open* the project folder and it should automatically detect the generated CMake files.
+   project to start working on it.
+   - If you chose **Visual Studio**, you can _click_ on the generated `.sln` file to open the project right away.
+   - If you chose **Visual Studio Code**, you can _open_ the project folder and it should automatically detect the generated build files.
+   - If you chose **CLion**, you can _open_ the project folder and it should automatically detect the generated CMake files.
 
 ## Running the Application
 

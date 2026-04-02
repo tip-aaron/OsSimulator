@@ -1,140 +1,177 @@
 #include <algorithm>
-#include <chrono>
-#include <cstdio>
+#include <factory.hpp>
+#include <iomanip>
+#include <iostream>
+#include <memory.hpp>
 #include <memory>
+#include <scheduler.hpp>
+#include <sim_engine.hpp>
+#include <sim_io.hpp>
+#include <sim_metrics.hpp>
+#include <string>
+#include <task.hpp>
 #include <vector>
 
-#include "metrics.hpp"
-#include "os_engine.hpp"
-#include "os_factory.hpp"
 #include "utils/threading.hpp"
-#include "workload_parser.hpp"
 
-void printHeader(const std::string &title) {
-  printf("\n======================================================\n");
-  printf("  %s\n", title.c_str());
-  printf("======================================================\n");
+using namespace std;
+using namespace os_simulator;
+
+void printTableSeparator(int width, char fill = '-') {
+  cout << "+" << setfill(fill) << setw(width - 2) << "" << "+" << setfill(' ')
+       << endl;
 }
 
 int main(int argc, char *argv[]) {
-  if (argc < 2) {
-    fprintf(stderr, "Usage: %s <PROJECT_ROOT_PATH>\n", argv[0]);
-    fprintf(stderr, "Example: %s ../workloads/\n", argv[0]);
+  string workloadRoot = (argc > 1) ? argv[1] : ".";
 
-    return 1;
+  cout << "Loading workload from: " << workloadRoot << "..." << endl;
+  WorkloadParser parser(workloadRoot);
+
+  vector<unique_ptr<Task>> tasks =
+      parser.parse(WorkloadType::MIXED_INTERACTIVE_BACKGROUND);
+  size_t totalTasks = tasks.size();
+
+  if (totalTasks == 0) {
+    cerr << "Warning: No tasks loaded. Exiting." << endl;
+    return 0;
   }
 
-  std::string projectRoot = argv[1];
+  cout << "Successfully loaded " << totalTasks << " tasks.\n" << endl;
 
-  printf("Starting simulation with project root: %s\n", projectRoot.c_str());
+  shared_ptr<IScheduler> scheduler = createScheduler();
+  shared_ptr<IMemoryManager> memoryManager = createMemoryManager();
 
-  std::shared_ptr<os_simulation_scheduler::IScheduler> scheduler =
-      os_simulation_factory::createScheduler();
-  std::shared_ptr<os_simulation_memory::IMemoryManager> memoryManager =
-      os_simulation_factory::createMemoryManager();
+  SimulationEngine engine(scheduler, memoryManager, std::move(tasks));
 
-  os_simulation_engine::OsSimulationEngine engine(scheduler, memoryManager);
+  ConsoleSpinnerReporter reporter([&engine]() -> size_t {
+    return engine.getMetrics()->cpu.getCompletedProcessCount();
+  });
 
-  try {
-    os_simulation_parser::WorkloadParser parser(projectRoot);
+  reporter.start(totalTasks);
+  engine.run();
+  reporter.stop();
 
-    auto currentWorkload =
-        os_simulation_parser::WorkloadType::MIXED_INTERACTIVE_BACKGROUND;
+  const OsSimulationMetrics *metrics = engine.getMetrics();
+  const CpuMetrics &cpu = metrics->cpu;
+  const MemoryMetrics &mem = metrics->memory;
 
-    printHeader("SIMULATION INITIALIZATION");
-    printf("Parsing workload scenario...\n");
+  const int TABLE_WIDTH = 55;
 
-    auto workloads = parser.parse(currentWorkload);
+  cout << "\n\n";
+  printTableSeparator(TABLE_WIDTH, '=');
+  cout << "| " << left << setw(TABLE_WIDTH - 4) << "OS SIMULATION RESULTS"
+       << " |" << endl;
+  printTableSeparator(TABLE_WIDTH, '=');
 
-    if (workloads.empty()) {
-      fprintf(
-          stderr,
-          "Warning: No workloads loaded. Check your CSV and trace files.\n");
+  cout << "| " << left << setw(TABLE_WIDTH - 4) << "CPU & SCHEDULING METRICS"
+       << " |" << endl;
+  printTableSeparator(TABLE_WIDTH);
 
-      return 1;
-    }
+  cout << "| " << left << setw(30) << "Total Simulation Ticks"
+       << "| " << right << setw(19) << cpu.getTotalSimulationTicks() << " |"
+       << endl;
 
-    printf("Successfully loaded %zu processes...\n", workloads.size());
-    printf("Preparing all processes for simulation...\n");
-    engine.loadWorkload(workloads, parser);
-    printf("All processes have been prepared!...\n");
+  cout << "| " << left << setw(30) << "Total Busy Ticks"
+       << "| " << right << setw(19) << cpu.getTotalBusyTicks() << " |" << endl;
 
-    const os_simulation_metrics::OsSimulationMetrics &metrics =
-        engine.getMetricsconst();
+  cout << "| " << left << setw(30) << "Total Idle Ticks"
+       << "| " << right << setw(19) << cpu.getTotalIdleTicks() << " |" << endl;
 
-    auto simStartTime = std::chrono::steady_clock::now();
-    os_simulation_threading::ConsoleSpinnerReporter progressReporter(
-        [&]() -> size_t { return metrics.cpu.getCompletedProcessCount(); });
+  cout << "| " << left << setw(30) << "Context Switch Count"
+       << "| " << right << setw(19) << cpu.getContextSwitchCounts() << " |"
+       << endl;
 
-    progressReporter.start(workloads.size());
+  cout << "| " << left << setw(30) << "Context Switch Ticks"
+       << "| " << right << setw(19) << cpu.getTotalContextSwitchTicks() << " |"
+       << endl;
 
-    try {
-      printf("Executing OS Simulation...\n");
-      engine.runSimulation();
-      progressReporter.stop();
+  printTableSeparator(TABLE_WIDTH);
 
-      auto simEndTime = std::chrono::steady_clock::now();
-      float totalSec = std::chrono::duration_cast<std::chrono::milliseconds>(
-                           simEndTime - simStartTime)
-                           .count() /
-                       1000.0f;
+  cout << "| " << left << setw(30) << "CPU Utilization"
+       << "| " << right << fixed << setprecision(2) << setw(18)
+       << cpu.getCpuUtilization() << "% |" << endl;
 
-      printf(
-          "Engine finished crunching %llu simulated ticks in %.2f seconds.\n",
-          (unsigned long long)metrics.cpu.getTotalSimulationTicks(), totalSec);
+  cout << "| " << left << setw(30) << "Throughput (Tasks/Tick)"
+       << "| " << right << fixed << setprecision(6) << setw(19)
+       << cpu.getThroughput() << " |" << endl;
 
-      printf("Simulation completed successfully!\n");
+  cout << "| " << left << setw(30) << "Avg Waiting Time"
+       << "| " << right << fixed << setprecision(2) << setw(19)
+       << cpu.getAvgWaitingTime() << " |" << endl;
 
-    } catch (const std::exception &e) {
-      progressReporter.stop();
-      fprintf(stderr, "\n[CRITICAL ERROR] %s\n", e.what());
-      return 1;
-    }
+  cout << "| " << left << setw(30) << "Avg Turnaround Time"
+       << "| " << right << fixed << setprecision(2) << setw(19)
+       << cpu.getAvgTurnaroundTime() << " |" << endl;
 
-    printHeader("SIMULATION RESULTS: CPU METRICS (CFS)");
-    printf("%-30s %llu\n", "Total Simulation Ticks:",
-           (unsigned long long)metrics.cpu.getTotalSimulationTicks());
-    printf("%-30s %.2f%%\n",
-           "CPU Utilization:", metrics.cpu.getCpuUtilization());
-    printf("%-30s %g processes/tick\n",
-           "Throughput:", metrics.cpu.getThroughput());
-    printf("%-30s %.2f ticks\n",
-           "Avg Waiting Time:", metrics.cpu.getAvgWaitingTime());
-    printf("%-30s %.2f ticks\n",
-           "Avg Turnaround Time:", metrics.cpu.getAvgTurnaroundTime());
-    printf("%-30s %.2f ticks\n",
-           "Avg Response Time:", metrics.cpu.getAvgResponseTime());
+  cout << "| " << left << setw(30) << "Avg Response Time"
+       << "| " << right << fixed << setprecision(2) << setw(19)
+       << cpu.getAvgResponseTime() << " |" << endl;
 
-    printHeader("SIMULATION RESULTS: MEMORY METRICS (MGLRU)");
-    printf("%-30s %u\n",
-           "Total Memory Accesses:", metrics.memory.getTotalAccesses());
-    printf("%-30s %u\n",
-           "Total Page Faults:", metrics.memory.getTotalPageFaults());
-    printf("%-30s %.4f%%\n",
-           "Page Fault Rate:", metrics.memory.getPageFaultRate() * 100.0);
+  printTableSeparator(TABLE_WIDTH, '=');
 
-    printf("\n--- Top 5 Processes by Page Faults ---\n");
+  double jainIndex = cpu.getJainsFairnessIndex();
+  string fairnessLabel;
+  if (jainIndex >= 0.95)
+    fairnessLabel = "(Excellent)";
+  else if (jainIndex >= 0.8)
+    fairnessLabel = "(Good)";
+  else if (jainIndex >= 0.6)
+    fairnessLabel = "(Fair)";
+  else
+    fairnessLabel = "(Poor/Biased)";
 
-    auto faultMap = metrics.memory.getPerProcessFaultMap();
+  cout << "| " << left << setw(20) << "Jain Fairness Index" << right << setw(10)
+       << fairnessLabel << "| " << right << fixed << setprecision(4) << setw(19)
+       << jainIndex << " |" << endl;
 
-    std::vector<std::pair<int, int>> sortedFaults(faultMap.begin(),
-                                                  faultMap.end());
+  printTableSeparator(TABLE_WIDTH, '=');
 
-    std::sort(sortedFaults.begin(), sortedFaults.end(),
-              [](const auto &a, const auto &b) { return a.second > b.second; });
+  // --- MEMORY METRICS TABLE ---
+  cout << "| " << left << setw(TABLE_WIDTH - 4) << "MEMORY & PAGING METRICS"
+       << " |" << endl;
+  printTableSeparator(TABLE_WIDTH);
 
-    int count = 0;
-    for (const auto &[pid, faults] : sortedFaults) {
-      printf("PID %-5d: %d faults\n", pid, faults);
+  cout << "| " << left << setw(30) << "Total Memory Accesses"
+       << "| " << right << setw(19) << mem.getTotalAccesses() << " |" << endl;
 
-      if (++count >= 5) break;
-    }
-    fprintf(stderr, "======================================================\n");
+  cout << "| " << left << setw(30) << "Total Page Faults"
+       << "| " << right << setw(19) << mem.getTotalPageFaults() << " |" << endl;
 
-  } catch (const std::exception &e) {
-    fprintf(stderr, "\n[CRITICAL ERROR] %s\n", e.what());
-    return 1;
+  cout << "| " << left << setw(30) << "Page Fault Rate"
+       << "| " << right << fixed << setprecision(4) << setw(18)
+       << (mem.getPageFaultRate() * 100.0) << "% |" << endl;
+
+  printTableSeparator(TABLE_WIDTH, '=');
+  cout << endl;
+
+  // --- TOP 10 TASK FAULTS ---
+  cout << "| " << left << setw(TABLE_WIDTH - 4) << "TOP 10 TASK PAGE FAULTS"
+       << " |" << endl;
+  printTableSeparator(TABLE_WIDTH);
+  cout << "| " << left << setw(15) << "Task ID"
+       << "| " << right << setw(34) << "Fault Count" << " |" << endl;
+  printTableSeparator(TABLE_WIDTH);
+
+  // 1. Get the map and copy to a vector for sorting
+  auto faultMap = mem.getPerTaskFaultMap();
+  vector<pair<uint16_t, uint32_t>> sortedFaults(faultMap.begin(),
+                                                faultMap.end());
+
+  // 2. Sort descending by fault count (second element of the pair)
+  sort(sortedFaults.begin(), sortedFaults.end(),
+       [](const auto &a, const auto &b) { return a.second > b.second; });
+
+  // 3. Print the top 10
+  int count = 0;
+  for (const auto &[taskId, faultCount] : sortedFaults) {
+    if (count++ >= 10) break;
+    cout << "| " << left << "ID: " << setw(11) << taskId << "| " << right
+         << setw(34) << faultCount << " |" << endl;
   }
 
-  return 0;
+  printTableSeparator(TABLE_WIDTH, '=');
+  cout << endl;
+
+  return EXIT_SUCCESS;
 }

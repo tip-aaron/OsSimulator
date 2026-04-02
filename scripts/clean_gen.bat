@@ -41,6 +41,8 @@ IF EXIST "%PREMAKE%" (
     ECHO Warning: Premake binary not found at %PREMAKE%. Skipping Premake clean...
 )
 
+RMDIR /S /Q ".cache"
+
 ECHO.
 ECHO Cleaning Python virtual environment...
 IF EXIST "visualizer\.venv" (

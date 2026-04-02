@@ -1,4 +1,6 @@
 class WorkloadConfiguration:
+    MEMORY_INTENSITY_RATIO = 0.5
+
     RANDOM_SEED = 42
     """
     int: Fixed seed for the random number generator.
@@ -48,15 +50,6 @@ class WorkloadConfiguration:
     Rationale: 1200 is strictly greater than the 1024 physical frames. If a process
     runs this loop, it is mathematically guaranteed to trigger Belady's Anomaly and
     thrash a standard LRU algorithm, perfectly testing the MGLRU protection logic.
-    """
-
-    LOOP_SIZE_LARGE = 80
-    """
-    int: A larger cycle size for aggressive background thrashing.
-
-    Rationale: Creates severe memory pressure to test if the Multi-Generational
-    LRU (MGLRU) can successfully age and evict these pages without impacting
-    the hot zones of high-priority interactive tasks.
     """
 
     BURST_INTERACTIVE_MEAN = 2.0
@@ -112,7 +105,7 @@ class WorkloadConfiguration:
     PRIORITY_MAXIMUM = 10
     """int: The lowest priority bound (Linux Nice 19 equivalent)."""
 
-    PRIORITY_INTERACTIVE_MEAN = 2.0
+    PRIORITY_INTERACTIVE_MEAN = 5.0
     """
     float: The mean priority for interactive scenarios.
 
@@ -120,10 +113,10 @@ class WorkloadConfiguration:
     the largest time slices in the Completely Fair Scheduler (CFS).
     """
 
-    PRIORITY_INTERACTIVE_DEVIATION = 1.0
+    PRIORITY_INTERACTIVE_DEVIATION = 0.0
     """float: Standard deviation for interactive priority distribution."""
 
-    PRIORITY_BACKGROUND_MEAN = 9.0
+    PRIORITY_BACKGROUND_MEAN = 5.0
     """
     float: The mean priority for background scenarios.
 
@@ -131,16 +124,16 @@ class WorkloadConfiguration:
     do not starve the CPU of other critical processes.
     """
 
-    PRIORITY_BACKGROUND_DEVIATION = 1.0
+    PRIORITY_BACKGROUND_DEVIATION = 0.0
     """float: Standard deviation for background priority distribution."""
 
     PRIORITY_MIXED_MEAN = 5.0
     """float: Normal distribution center for a realistically mixed system load."""
 
-    PRIORITY_MIXED_DEVIATION = 2.0
+    PRIORITY_MIXED_DEVIATION = 0.0
     """float: Standard deviation for a mixed system load."""
 
-    ARRIVAL_RATE_LAMBDA = 0.5
+    ARRIVAL_RATE_LAMBDA = 0.05
     """
     float: The lambda parameter for the exponential inter-arrival distribution.
 

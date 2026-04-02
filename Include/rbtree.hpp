@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cstdio>
 #include <stdexcept>
 #include <string>
 
@@ -39,6 +38,7 @@ class RbTree {
  private:
   RbTreeNode<T> *pMRootNode;
   RbTreeNode<T> *pMEmptyLeaf;
+  size_t mTreeSize{0};
 
   void destroyTree(RbTreeNode<T> *pNode) {
     if (pNode != pMEmptyLeaf) {
@@ -64,7 +64,7 @@ class RbTree {
 
     pRightChild->pParent = pNode->pParent;
 
-    if (pNode->pParent == nullptr) {
+    if (pNode->pParent == pMEmptyLeaf) {
       this->pMRootNode = pRightChild;
     } else if (pNode == pNode->pParent->pLeftChild) {
       pNode->pParent->pLeftChild = pRightChild;
@@ -91,7 +91,7 @@ class RbTree {
 
     pLeftChild->pParent = pNode->pParent;
 
-    if (pNode->pParent == nullptr) {
+    if (pNode->pParent == pMEmptyLeaf) {
       this->pMRootNode = pLeftChild;
     } else if (pNode == pNode->pParent->pRightChild) {
       pNode->pParent->pRightChild = pLeftChild;
@@ -106,7 +106,7 @@ class RbTree {
   void balanceAfterInsertion(RbTreeNode<T> *pNewNode) {
     RbTreeNode<T> *pUncleNode;
 
-    while (pNewNode->pParent != nullptr &&
+    while (pNewNode->pParent != pMEmptyLeaf &&
            pNewNode->pParent->color == RbTreeNodeColor::RED) {
       RbTreeNode<T> *pGrandparentNode = pNewNode->pParent->pParent;
 
@@ -195,7 +195,9 @@ class RbTree {
 
         if (pSiblingNode->pLeftChild->color == RbTreeNodeColor::BLACK &&
             pSiblingNode->pRightChild->color == RbTreeNodeColor::BLACK) {
-          pSiblingNode->color = RbTreeNodeColor::RED;
+          if (pSiblingNode != pMEmptyLeaf) {
+            pSiblingNode->color = RbTreeNodeColor::RED;
+          }
           pCurrentNode = pCurrentNode->pParent;
         } else {
           if (pSiblingNode->pRightChild->color == RbTreeNodeColor::BLACK) {
@@ -261,7 +263,7 @@ class RbTree {
    * different node in its place.
    */
   void replaceNodeInParent(RbTreeNode<T> *pOutNode, RbTreeNode<T> *pInNode) {
-    if (pOutNode->pParent == nullptr) {
+    if (pOutNode->pParent == pMEmptyLeaf) {
       this->pMRootNode = pInNode;
     } else if (pOutNode == pOutNode->pParent->pLeftChild) {
       pOutNode->pParent->pLeftChild = pInNode;
@@ -284,18 +286,6 @@ class RbTree {
     return pNode;
   }
 
-  void orint(RbTreeNode<T> pNode) const {
-    if (pNode != pMEmptyLeaf) {
-      printInOrderHelper(pNode->pLeftChild);
-
-      std::string colorString = to_string(pNode->color);
-
-      printf("%d (%s)\n", pNode->data, colorString.c_str());
-
-      printInOrderHelper(pNode->rightChild);
-    }
-  }
-
  public:
   /**
    * @brief Creates a new, empty Red-Black Tree.
@@ -303,9 +293,9 @@ class RbTree {
   RbTree() {
     pMEmptyLeaf = new RbTreeNode<T>(T());
     pMEmptyLeaf->color = RbTreeNodeColor::BLACK;
-    pMEmptyLeaf->pLeftChild = nullptr;
-    pMEmptyLeaf->pRightChild = nullptr;
-    pMEmptyLeaf->pParent = nullptr;
+    pMEmptyLeaf->pLeftChild = pMEmptyLeaf;
+    pMEmptyLeaf->pRightChild = pMEmptyLeaf;
+    pMEmptyLeaf->pParent = pMEmptyLeaf;
 
     pMRootNode = pMEmptyLeaf;
   }
@@ -322,12 +312,20 @@ class RbTree {
   void insert(T value) {
     RbTreeNode<T> *pNewNode = new RbTreeNode<T>(value);
 
-    pNewNode->pParent = nullptr;
+    pNewNode->pParent = pMEmptyLeaf;
     pNewNode->pLeftChild = pMEmptyLeaf;
     pNewNode->pRightChild = pMEmptyLeaf;
     pNewNode->color = RbTreeNodeColor::RED;
 
-    RbTreeNode<T> *pCurrentParentNode = nullptr;
+    if (pMRootNode == pMEmptyLeaf) {
+      pMRootNode = pNewNode;
+      pMRootNode->color = RbTreeNodeColor::BLACK;
+      mTreeSize++;
+
+      return;
+    }
+
+    RbTreeNode<T> *pCurrentParentNode = pMEmptyLeaf;
     RbTreeNode<T> *pCurrentNode = this->pMRootNode;
 
     while (pCurrentNode != pMEmptyLeaf) {
@@ -342,7 +340,7 @@ class RbTree {
 
     pNewNode->pParent = pCurrentParentNode;
 
-    if (pCurrentParentNode == nullptr) {
+    if (pCurrentParentNode == pMEmptyLeaf) {
       pMRootNode = pNewNode;
     } else if (pNewNode->data < pCurrentParentNode->data) {
       pCurrentParentNode->pLeftChild = pNewNode;
@@ -350,17 +348,9 @@ class RbTree {
       pCurrentParentNode->pRightChild = pNewNode;
     }
 
-    if (pNewNode->pParent == nullptr) {
-      pNewNode->color = RbTreeNodeColor::BLACK;
-
-      return;
-    }
-
-    if (pNewNode->pParent->pParent == nullptr) {
-      return;
-    }
-
     balanceAfterInsertion(pNewNode);
+
+    mTreeSize++;
   }
 
   void removeNode(RbTreeNode<T> *pOutNode) {
@@ -406,6 +396,9 @@ class RbTree {
     if (originalColor == RbTreeNodeColor::BLACK) {
       balanceTreeAfterDeletion(pReplacementNode);
     }
+
+    pMEmptyLeaf->color = RbTreeNodeColor::BLACK;
+    mTreeSize--;
   }
 
   /**
@@ -423,6 +416,43 @@ class RbTree {
     removeNode(pMinNode);
 
     return minValue;
+  }
+
+  T peekMin() {
+    if (pMRootNode == pMEmptyLeaf) {
+      throw std::runtime_error("Cannot peek minimum: The tree is empty.");
+    }
+
+    RbTreeNode<T> *pMinNode = findMinimumNode(pMRootNode);
+    T minValue = pMinNode->data;
+
+    return minValue;
+  }
+
+  size_t size() const { return mTreeSize; }
+
+  bool empty() const { return pMRootNode == pMEmptyLeaf; }
+
+  /**
+   * @brief Removes a specific value from the tree.
+   * For the scheduler, this is used to remove a task by its pointer/vruntime.
+   */
+  void remove(T value) {
+    RbTreeNode<T> *pCurrent = pMRootNode;
+
+    while (pCurrent != pMEmptyLeaf) {
+      if (value == pCurrent->data) {
+        removeNode(pCurrent);
+
+        return;
+      }
+
+      if (value < pCurrent->data) {
+        pCurrent = pCurrent->pLeftChild;
+      } else {
+        pCurrent = pCurrent->pRightChild;
+      }
+    }
   }
 };
 }  // namespace os_simulator

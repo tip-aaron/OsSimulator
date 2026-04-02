@@ -52,6 +52,8 @@ else
     echo "Warning: Premake binary not found at $PREMAKE. Skipping Premake clean..."
 fi
 
+rm -rf ".cache"
+
 echo ""
 echo "Cleaning Python virtual environment..."
 rm -rf "visualizer/.venv"
